@@ -1,0 +1,8 @@
+name: morgGates
+main: org.micoli.minecraft.gates.Gates
+version: 0.1
+description: Gates teleportation
+depend: [morgUtils]
+commands:
+    mg:
+      description: main command 

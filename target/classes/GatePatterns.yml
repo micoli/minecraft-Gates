@@ -1,0 +1,13 @@
+patterns :
+  - name   : pattern01
+    blocks :
+    - a_7
+    - b_56
+    - c_73
+    - d_86
+    lines :
+    - aaaaa
+    - a---a
+    - a-c-a
+    - bdcdb
+    - --!--
