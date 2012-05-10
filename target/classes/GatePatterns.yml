@@ -8,6 +8,6 @@ patterns :
     lines :
     - aaaaa
     - a---a
-    - a-c-a
-    - bdcdb
+    - a---a
+    - bd-db
     - --!--

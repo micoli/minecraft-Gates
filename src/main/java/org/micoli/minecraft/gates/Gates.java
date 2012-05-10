@@ -17,6 +17,7 @@ import org.micoli.minecraft.bukkit.QDCommand;
 import org.micoli.minecraft.gates.entities.GateObject;
 import org.micoli.minecraft.gates.entities.GateObject.GateOrientation;
 import org.micoli.minecraft.gates.entities.GatePattern;
+import org.micoli.minecraft.gates.listeners.GatesPlayerListener;
 import org.micoli.minecraft.gates.managers.GateManager;
 import org.micoli.minecraft.gates.managers.GatePatternManager;
 import org.micoli.minecraft.gates.managers.GatesCommandManager;
@@ -38,8 +39,10 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 
 	/** The gate manager. */
 	private GateManager gateManager;
-	
+
+	/** The gate pattern manager. */
 	GatePatternManager gatePatternManager;
+
 	/**
 	 * Gets the single instance of LocalPlan.
 	 * 
@@ -68,7 +71,9 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		gateManager = new GateManager(instance);
 
 		initializeFileFromRessource("GatePatterns.yml");
-		gatePatternManager = GatePatternManager.readGatesPattern(instance,"GatePatterns.yml");
+		gatePatternManager = GatePatternManager.readGatesPattern(instance, "GatePatterns.yml");
+		
+		getPm().registerEvents(new GatesPlayerListener(this),this);
 		
 		logger.log(gatePatternManager.toString());
 		saveConfig();
@@ -76,9 +81,15 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		executor = new GatesCommandManager(this, new Class[] { getClass() });
 	}
 
+	/**
+	 * Initialize file from ressource.
+	 * 
+	 * @param fileName
+	 *            the file name
+	 */
 	private void initializeFileFromRessource(String fileName) {
 		File patternFile = new File(getDataFolder(), fileName);
-		if (!patternFile.exists()|| true) {
+		if (!patternFile.exists() || true) {
 			try {
 				InputStream isr = getClass().getClassLoader().getResourceAsStream(fileName);
 				File fileOut = new File(getDataFolder().getAbsolutePath() + "/" + fileName);
@@ -141,6 +152,8 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	}
 
 	/**
+	 * Gets the gate pattern manager.
+	 * 
 	 * @return the gatePatternManager
 	 */
 	public GatePatternManager getGatePatternManager() {
@@ -148,7 +161,10 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	}
 
 	/**
-	 * @param gatePatternManager the gatePatternManager to set
+	 * Sets the gate pattern manager.
+	 * 
+	 * @param gatePatternManager
+	 *            the gatePatternManager to set
 	 */
 	public void setGatePatternManager(GatePatternManager gatePatternManager) {
 		this.gatePatternManager = gatePatternManager;
@@ -183,33 +199,38 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	 * @throws Exception
 	 *             the exception
 	 */
-	@QDCommand(aliases = "create", permissions = { "gates.create" }, usage = "", description = "create a gate")
+	@QDCommand(aliases = "create", permissions = { "gates.create" }, usage = "<patternName> <gateNetworkID>", description = "create a gate")
 	public void cmdGates(CommandSender sender, Command command, String label, String[] args) throws Exception {
-		Block block = ((Player)sender).getTargetBlock(null, 50);
-		int iOrientation = (int) (((Player)sender).getLocation().getYaw() + 180) % 360;
+		Player player = ((Player) sender);
+		Block block = player.getTargetBlock(null, 50);
+		int iOrientation = (int) (player.getLocation().getYaw() + 180) % 360;
 		GateOrientation orientation = GateOrientation.NS;
-		String dir = "N";
+		String facing = "N";
 		if (iOrientation < 45 + 0 * 90) {
-			dir = "N";
+			facing = "N";
 			orientation = GateOrientation.EW;
 		} else if (iOrientation < 45 + 1 * 90) {
-			dir = "E";
+			facing = "E";
 			orientation = GateOrientation.NS;
 		} else if (iOrientation < 45 + 2 * 90) {
-			dir = "S";
+			facing = "S";
 			orientation = GateOrientation.EW;
 		} else if (iOrientation < 45 + 3 * 90) {
-			dir = "W";
+			facing = "W";
 			orientation = GateOrientation.NS;
 		}
 
-		try{
+		logger.log("Facing %s,%s", facing, orientation.toString());
+
+		try {
 			GatePattern gatePattern = this.getGatePatternManager().getGatePatternFromName(args[1]);
-			
-			GateObject gate = new GateObject(instance,block,gatePattern,orientation,((Player)sender).getWorld().getName());
+
+			GateObject gate = new GateObject(instance, block, gatePattern, orientation, player.getWorld().getName(), args[2]);
 			gate.draw(gatePattern);
-			sendComments((Player) sender, "create", false);
-		}catch(Exception e){
+			gate.save();
+			this.getGateManager().addGate(gate);
+			sendComments((Player) sender, "Gate created", false);
+		} catch (Exception e) {
 			logger.dumpStackTrace(e);
 		}
 	}

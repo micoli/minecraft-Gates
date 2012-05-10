@@ -1,7 +1,9 @@
 package org.micoli.minecraft.gates.managers;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
@@ -16,8 +18,10 @@ public class GateManager {
 
 	/** The plugin. */
 	private Gates plugin;
+	
 	/** The internal array of parcels. */
 	private Set<GateObject> aGates;
+	private Map<String,Set<GateObject>> aGatesNetwork = new HashMap<String,Set<GateObject>>();
 
 	/**
 	 * Instantiates a new parcel manager.
@@ -27,16 +31,28 @@ public class GateManager {
 	public GateManager(Gates instance) {
 		this.plugin = instance;
 		aGates = new HashSet<GateObject>();
-		
 		Iterator<GateObject> gateIterator = plugin.getStaticDatabase().find(GateObject.class).findList().iterator();
+		instance.logger.log("eeeee %s",gateIterator.toString());
 		if (gateIterator.hasNext()) {
+			instance.logger.log("eeeee 1 %s",gateIterator.toString());
 			while (gateIterator.hasNext()) {
+				instance.logger.log("eeeee 2 %s",gateIterator.toString());
 				GateObject gate = gateIterator.next();
 				if(gate.initFromDatabase(plugin)){
-					aGates.add(gate);
+					plugin.logger.log(gate.toString());
+					addGate(gate);
 				}
 			}
 		}
+	}
+	
+	public void addGate(GateObject gateObject){
+		aGates.add(gateObject);
+		String networkID = gateObject.getNetworkID();
+		if(!aGatesNetwork.containsKey(networkID)){
+			aGatesNetwork.put(networkID,new HashSet<GateObject>());
+		}
+		aGatesNetwork.get(networkID).add(gateObject);
 	}
 	
 	/**
@@ -63,6 +79,7 @@ public class GateManager {
 	 * @param player the player
 	 */
 	public void playerMove(Player player) {
+		//plugin.logger.log("%d",aGates.size());
 		for(GateObject gate : aGates){
 			if(gate.isPlayerInside(player)){
 				gate.useGate(player);

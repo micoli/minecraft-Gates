@@ -13,16 +13,39 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class GatePatternManager.
+ */
 public class GatePatternManager {
-	public List<GatePattern> patterns;
+	
+	/** The patterns. */
+	private List<GatePattern> patterns;
 	
 	/**
+	 * Gets the patterns.
+	 *
 	 * @return the patterns
 	 */
 	public List<GatePattern> getPatterns() {
 		return patterns;
 	}
 	
+	/**
+	 * Sets the patterns.
+	 *
+	 * @param patterns the patterns to set
+	 */
+	public void setPatterns(List<GatePattern> patterns) {
+		this.patterns = patterns;
+	}
+	
+	/**
+	 * Gets the gate pattern from name.
+	 *
+	 * @param name the name
+	 * @return the gate pattern from name
+	 */
 	public GatePattern getGatePatternFromName(String name){
 		for(GatePattern gatePattern:patterns){
 			if(gatePattern.getName().equalsIgnoreCase(name)){
@@ -31,12 +54,14 @@ public class GatePatternManager {
 		}
 		return null;
 	}
+	
 	/**
-	 * @param patterns the patterns to set
+	 * Read gates pattern.
+	 *
+	 * @param plugin the plugin
+	 * @param fileName the file name
+	 * @return the gate pattern manager
 	 */
-	public void setPatterns(List<GatePattern> patterns) {
-		this.patterns = patterns;
-	}
 	public static GatePatternManager readGatesPattern(Gates plugin, String fileName) {
 		InputStream input;
 		try {
@@ -49,13 +74,17 @@ public class GatePatternManager {
 			Yaml yaml = new Yaml(constructor);
 			GatePatternManager gatePatternManager = (GatePatternManager) yaml.load(input);
 			for(GatePattern gatePattern : gatePatternManager.patterns){
-				gatePattern.initPattern();
+				gatePattern.initPattern(plugin);
 			}
 			return gatePatternManager;
 		} catch (FileNotFoundException e) {
 			return null;
 		}
 	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	public String toString(){
 		return patterns.toString();
 	}

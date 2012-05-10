@@ -6,17 +6,38 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Material;
+import org.micoli.minecraft.gates.Gates;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class GatePattern.
+ */
 public class GatePattern {
-	public String name = "";
-	public LinkedHashSet<String> blocks;
+	
+	/** The name. */
+	private String name = "";
+	
+	/** The blocks. */
+	private LinkedHashSet<String> blocks;
+	
+	/** The blocks map. */
 	private HashMap<String, Material> blocksMap = new HashMap<String, Material>();
-	public LinkedHashSet<String> lines;
-	public int width;
-	public int height;
+	
+	/** The lines. */
+	private LinkedHashSet<String> lines;
+	
+	/** The width. */
+	private int width;
+	
+	/** The height. */
+	private int height;
+	
+	/** The x offset. */
 	private int xOffset;
 
 	/**
+	 * Gets the name.
+	 *
 	 * @return the name
 	 */
 	public String getName() {
@@ -24,14 +45,17 @@ public class GatePattern {
 	}
 
 	/**
-	 * @param name
-	 *            the name to set
+	 * Sets the name.
+	 *
+	 * @param name the name to set
 	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
 	/**
+	 * Gets the blocks.
+	 *
 	 * @return the blocks
 	 */
 	public LinkedHashSet<String> getBlocks() {
@@ -39,14 +63,17 @@ public class GatePattern {
 	}
 
 	/**
-	 * @param blocks
-	 *            the blocks to set
+	 * Sets the blocks.
+	 *
+	 * @param blocks the blocks to set
 	 */
 	public void setBlocks(LinkedHashSet<String> blocks) {
 		this.blocks = blocks;
 	}
 
 	/**
+	 * Gets the lines.
+	 *
 	 * @return the lines
 	 */
 	public LinkedHashSet<String> getLines() {
@@ -54,13 +81,17 @@ public class GatePattern {
 	}
 
 	/**
-	 * @param lines
-	 *            the lines to set
+	 * Sets the lines.
+	 *
+	 * @param lines the lines to set
 	 */
 	public void setLines(LinkedHashSet<String> lines) {
 		this.lines = lines;
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	public String toString(){
 		String result = "";
 		result = result + "{name:"+name+",blocksMap:"+this.getBlocksMap().toString()+",lines:"+this.lines.toString()+"}";
@@ -68,15 +99,27 @@ public class GatePattern {
 		
 	}
 
+	/**
+	 * Gets the width.
+	 *
+	 * @return the width
+	 */
 	public int getWidth() {
 		return width;
 	}
 
+	/**
+	 * Gets the height.
+	 *
+	 * @return the height
+	 */
 	public int getHeight() {
 		return height;
 	}
 
 	/**
+	 * Gets the x offset.
+	 *
 	 * @return the xOffset
 	 */
 	public int getxOffset() {
@@ -84,6 +127,8 @@ public class GatePattern {
 	}
 
 	/**
+	 * Gets the blocks map.
+	 *
 	 * @return the blocksMap
 	 */
 	public HashMap<String, Material> getBlocksMap() {
@@ -91,13 +136,20 @@ public class GatePattern {
 	}
 
 	/**
+	 * Sets the blocks map.
+	 *
 	 * @param blocksMap the blocksMap to set
 	 */
 	public void setBlocksMap(HashMap<String, Material> blocksMap) {
 		this.blocksMap = blocksMap;
 	}
 
-	public void initPattern() {
+	/**
+	 * Inits the pattern.
+	 *
+	 * @param plugin the plugin
+	 */
+	public void initPattern(Gates plugin) {
 		Pattern pattern = Pattern.compile("(.*)_(.*)");
 		for (String txt : blocks) {
 			Matcher matcher = pattern.matcher(txt);
@@ -106,12 +158,12 @@ public class GatePattern {
 			}
 		}
 		
-		width = 0;
+		this.width = 0;
 		for (String txt : lines) {
-			width = Math.max(width, txt.length());
+			this.width = Math.max(this.width, txt.length());
 		}
-		height = lines.size();
+		this.height = lines.size();
 		Object[] patterns= lines.toArray();
-		xOffset = ((String)patterns[patterns.length-1]).indexOf('!');
+		this.xOffset = ((String)patterns[patterns.length-1]).indexOf('!');
 	}
 }

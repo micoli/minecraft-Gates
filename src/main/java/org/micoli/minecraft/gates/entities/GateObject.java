@@ -1,8 +1,5 @@
 package org.micoli.minecraft.gates.entities;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -61,27 +58,36 @@ public class GateObject {
 	@Length(max = 100)
 	String worldName="";
 	
-	/** The X,Y,Z location */
+	/** The X,Y,Z location. */
 	@NotNull
 	double X, Y, Z;
 	
-	/** The world name. */
+	/** The pattern used for creation. */
 	@NotNull
 	@Length(max = 100)
 	String pattern="";
 
+	/** The networkID of the gate. */
+	@NotNull
+	@Length(max = 100)
+	String networkID="";
+
+	/**
+	 * Instantiates a new gate object.
+	 */
 	public GateObject() {
 	}
+	
 	/**
 	 * Instantiates a new gate object.
 	 *
 	 * @param plugin the plugin
 	 * @param centerBlock the center block
-	 * @param width the width
-	 * @param height the height
+	 * @param gatePattern the gate pattern
 	 * @param orientation the orientation
+	 * @param worldName the world name
 	 */
-	public GateObject(Gates plugin,Block centerBlock, GatePattern gatePattern, GateOrientation orientation,String worldName) {
+	public GateObject(Gates plugin,Block centerBlock, GatePattern gatePattern, GateOrientation orientation,String worldName,String networkID) {
 		this.plugin = plugin;
 		this.blockObject = centerBlock;
 		this.width = gatePattern.getWidth();
@@ -90,7 +96,9 @@ public class GateObject {
 		this.X = blockObject.getX();
 		this.Y = blockObject.getY();
 		this.Z = blockObject.getZ();
-		this.worldName=worldName;
+		this.worldName = worldName;
+		this.networkID = networkID;
+		this.pattern = gatePattern.getName();
 	}
 
 	/**
@@ -118,27 +126,35 @@ public class GateObject {
 	 * @return true, if is player inside
 	 */
 	public boolean isPlayerInside(Player player) {
+		Location playerLocation = player.getLocation();
+		//plugin.logger.log("test %s %s %s",player,playerLocation.toString(),blockObject.getLocation().toString());
 		if (!player.getWorld().getName().equals(worldName)){
+			plugin.logger.log("not inside world %s %s",worldName,blockObject.getLocation().toString());
 			return false;
 		}
-		double X1 = player.getLocation().getX(), Y1 = player.getLocation().getY(), Z1 = player.getLocation().getZ();
-		if (xyzDistance(player.getLocation()) > Math.min(width, height)) {
+		double X1 = playerLocation.getX(), Y1 = playerLocation.getY(), Z1 = playerLocation.getZ();
+		/*if (xyzDistance(playerLocation) > Math.min(width, height)) {
+			plugin.logger.log("not inside %s",blockObject.getLocation().toString());
 			return false;
-		}
+		}*/
 		if (Y <= Y1 && Y1 <= Y + this.height) {
-			switch (this.orientation) {
-			case NS:
-				if ((Z - this.width / 2) <= Z1 && Z1 <= (Z + this.width / 2) && X == X1) {
-					return true;
-				}
+			//plugin.logger.log("Inside Y %f",Y1);
+			switch (orientation) {
+				case NS:
+					//plugin.logger.log("NS test player(%d -> %d,%d -> %d, %d %d %d ) W(%d) H(%d)",(int)X1,(int)X,(int)Y1,(int)Y,  (int)(Z - this.width / 2),(int)Z1,(int)(Z + this.width / 2)   ,width,height);
+					if ((Z - this.width / 2) <= Z1 && Z1 <= (Z + this.width / 2) && (int)X == (int)X1) {
+						plugin.logger.log("NS inside player");
+						return true;
+					}
 				break;
-			case EW:
-				if ((X - this.width / 2) <= X1 && X1 <= (X + this.width / 2) && Z == Z1) {
-					return true;
-				}
+				case EW:
+					if ((X - this.width / 2) <= X1 && X1 <= (X + this.width / 2) && (int)Z == (int)Z1) {
+						return true;
+					}
 				break;
 			}
 		}
+		//plugin.logger.log("not inside 2 %s",blockObject.getLocation().toString());
 		return false;
 	}
 
@@ -148,11 +164,11 @@ public class GateObject {
 	 * @param player the player
 	 */
 	public void useGate(Player player) {
-		
+		player.sendMessage("Use gate "+this.toString());	
 	}
 
 	/**
-	 * Inits the from database.
+	 * Init the object from the from database.
 	 *
 	 * @param instance the instance
 	 * @return true, if successful
@@ -167,35 +183,206 @@ public class GateObject {
 		}
 		return false;
 	}
+	
+	/**
+	 * Save.
+	 */
+	public void save() {
+		plugin.getStaticDatabase().save(this);
+	}
+
+	/**
+	 * Draw the gate
+	 *
+	 * @param gatePattern the gate pattern
+	 */
 	public void draw(GatePattern gatePattern) {
-		int xOffset = gatePattern.getxOffset();
-		Object[] patterns= gatePattern.getLines().toArray();
-		Arrays.sort(patterns, Collections.reverseOrder());
 		World world = plugin.getServer().getWorld(worldName);
+		int xOffset = gatePattern.getxOffset();
+		int yOffset=0;
+		Object[] patterns= gatePattern.getLines().toArray();
 		Location location = new Location(world,0,0,0);
-		plugin.logger.log(gatePattern.getBlocksMap().toString());
+		plugin.logger.log(gatePattern.getName());
 		for(int i=0;i<patterns.length;i++){
+			yOffset = patterns.length-i-1;
 			String line = ((String)patterns[i]);
-			plugin.logger.log("%d-_>%s",i,line);
+			plugin.logger.log("%d -> %s",i,line);
 			for(int j=0;j<line.length();j++){
 				switch (orientation) {
 					case EW:
-						location = new Location(world,X-xOffset+j,Y+i+1,Z);
+						location = new Location(world,X-xOffset+j,Y+yOffset,Z);
 					break;	
 					case NS:
-						location = new Location(world,X,Y+i+1,Z-xOffset+j);
+						location = new Location(world,X,Y+yOffset,Z-xOffset+j);
 					break;	
 				}
-				if(gatePattern.getBlocksMap().containsKey(line.charAt(j)+"")){
+				String blockKey = line.charAt(j)+"";
+				if(gatePattern.getBlocksMap().containsKey(blockKey)){
 					world.getBlockAt(location).setType(gatePattern.getBlocksMap().get(line.charAt(j)+""));
 				}else{
-					if((line.charAt(j)+"").equals("-")){
+					if(blockKey.equals("-")){
 						world.getBlockAt(location).setType(Material.AIR);
 					}else{
-						plugin.logger.log("not found "+line.charAt(j));
+						if(!blockKey.equals("!")){
+							plugin.logger.log("not found "+line.charAt(j));
+						}
 					}
 				}
 			}
 		}
+	}
+
+	/**
+	 * @return the plugin
+	 */
+	public Gates getPlugin() {
+		return plugin;
+	}
+
+	/**
+	 * @param plugin the plugin to set
+	 */
+	public void setPlugin(Gates plugin) {
+		this.plugin = plugin;
+	}
+
+	/**
+	 * @return the blockObject
+	 */
+	public Block getBlockObject() {
+		return blockObject;
+	}
+
+	/**
+	 * @param blockObject the blockObject to set
+	 */
+	public void setBlockObject(Block blockObject) {
+		this.blockObject = blockObject;
+	}
+
+	/**
+	 * @return the height
+	 */
+	public int getHeight() {
+		return height;
+	}
+
+	/**
+	 * @param height the height to set
+	 */
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
+	/**
+	 * @return the width
+	 */
+	public int getWidth() {
+		return width;
+	}
+
+	/**
+	 * @param width the width to set
+	 */
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	/**
+	 * @return the orientation
+	 */
+	public GateOrientation getOrientation() {
+		return orientation;
+	}
+
+	/**
+	 * @param orientation the orientation to set
+	 */
+	public void setOrientation(GateOrientation orientation) {
+		this.orientation = orientation;
+	}
+
+	/**
+	 * @return the worldName
+	 */
+	public String getWorldName() {
+		return worldName;
+	}
+
+	/**
+	 * @param worldName the worldName to set
+	 */
+	public void setWorldName(String worldName) {
+		this.worldName = worldName;
+	}
+
+	/**
+	 * @return the x
+	 */
+	public double getX() {
+		return X;
+	}
+
+	/**
+	 * @param x the x to set
+	 */
+	public void setX(double x) {
+		X = x;
+	}
+
+	/**
+	 * @return the y
+	 */
+	public double getY() {
+		return Y;
+	}
+
+	/**
+	 * @param y the y to set
+	 */
+	public void setY(double y) {
+		Y = y;
+	}
+
+	/**
+	 * @return the z
+	 */
+	public double getZ() {
+		return Z;
+	}
+
+	/**
+	 * @param z the z to set
+	 */
+	public void setZ(double z) {
+		Z = z;
+	}
+
+	/**
+	 * @return the pattern
+	 */
+	public String getPattern() {
+		return pattern;
+	}
+
+	/**
+	 * @param pattern the pattern to set
+	 */
+	public void setPattern(String pattern) {
+		this.pattern = pattern;
+	}
+
+	/**
+	 * @return the networkID
+	 */
+	public String getNetworkID() {
+		return networkID;
+	}
+
+	/**
+	 * @param networkID the networkID to set
+	 */
+	public void setNetworkID(String networkID) {
+		this.networkID = networkID;
 	}
 }
