@@ -162,9 +162,20 @@ public class GateObject {
 	 * Use gate.
 	 *
 	 * @param player the player
+	 * @param nextGate 
 	 */
-	public void useGate(Player player) {
-		player.sendMessage("Use gate "+this.toString());	
+	public void useGate(Player player, GateObject nextGate) {
+		player.sendMessage("Use gate "+this.toString());
+		Location targetDestination = nextGate.getBlockObject().getLocation();
+		if(nextGate.getOrientation()==GateOrientation.NS){
+			targetDestination = targetDestination.add(1, 1, 0);
+		}else{
+			targetDestination = targetDestination.add(0, 1, 1);
+		}
+		targetDestination.setPitch(player.getLocation().getPitch());
+		targetDestination.setYaw(player.getLocation().getYaw());
+		
+		player.teleport(targetDestination);
 	}
 
 	/**
@@ -177,11 +188,11 @@ public class GateObject {
 		plugin = instance;
 		World world = plugin.getServer().getWorld(worldName);
 		blockObject = world.getBlockAt(new Location(world,X,Y,Z));
-		if(blockObject.getTypeId()!=0){
-			initGate();
-			return true;
-		}
-		return false;
+		//if(blockObject.getTypeId()!=0){
+		initGate();
+		return true;
+		//}
+		//return false;
 	}
 	
 	/**

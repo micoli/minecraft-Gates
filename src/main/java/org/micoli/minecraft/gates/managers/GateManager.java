@@ -3,6 +3,7 @@ package org.micoli.minecraft.gates.managers;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.micoli.minecraft.gates.Gates;
 import org.micoli.minecraft.gates.entities.GateObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GateManager.
  */
@@ -21,7 +21,7 @@ public class GateManager {
 	
 	/** The internal array of parcels. */
 	private Set<GateObject> aGates;
-	private Map<String,Set<GateObject>> aGatesNetwork = new HashMap<String,Set<GateObject>>();
+	private Map<String,LinkedList<GateObject>> aGatesNetwork = new HashMap<String,LinkedList<GateObject>>();
 
 	/**
 	 * Instantiates a new parcel manager.
@@ -32,11 +32,8 @@ public class GateManager {
 		this.plugin = instance;
 		aGates = new HashSet<GateObject>();
 		Iterator<GateObject> gateIterator = plugin.getStaticDatabase().find(GateObject.class).findList().iterator();
-		instance.logger.log("eeeee %s",gateIterator.toString());
 		if (gateIterator.hasNext()) {
-			instance.logger.log("eeeee 1 %s",gateIterator.toString());
 			while (gateIterator.hasNext()) {
-				instance.logger.log("eeeee 2 %s",gateIterator.toString());
 				GateObject gate = gateIterator.next();
 				if(gate.initFromDatabase(plugin)){
 					plugin.logger.log(gate.toString());
@@ -50,7 +47,7 @@ public class GateManager {
 		aGates.add(gateObject);
 		String networkID = gateObject.getNetworkID();
 		if(!aGatesNetwork.containsKey(networkID)){
-			aGatesNetwork.put(networkID,new HashSet<GateObject>());
+			aGatesNetwork.put(networkID,new LinkedList<GateObject>());
 		}
 		aGatesNetwork.get(networkID).add(gateObject);
 	}
@@ -65,15 +62,6 @@ public class GateManager {
 	}
 
 	/**
-	 * Sets the a parcel.
-	 *
-	 * @param aGates the new a parcel
-	 */
-	public void setaParcel(Set<GateObject> aGates) {
-		this.aGates = aGates;
-	}
-
-	/**
 	 * Player move.
 	 *
 	 * @param player the player
@@ -82,7 +70,30 @@ public class GateManager {
 		//plugin.logger.log("%d",aGates.size());
 		for(GateObject gate : aGates){
 			if(gate.isPlayerInside(player)){
-				gate.useGate(player);
+				String netID=null;
+				for(String key:aGatesNetwork.keySet()){
+					if(aGatesNetwork.get(key).contains(gate)){
+						netID = key;
+						break;
+					}
+				}
+				if(netID!=null){
+					player.sendMessage("Using network : "+netID);
+					LinkedList<GateObject> network = aGatesNetwork.get(netID);
+					if (network.size()<2){
+						player.sendMessage("Not enough gates in network "+netID);
+					}else{
+						int idx = network.indexOf(gate);
+						GateObject nextGate = null;
+						if(network.getLast().equals(gate)){
+							nextGate = network.getFirst();
+						}else{
+							nextGate = network.get(idx+1);
+						}
+						gate.useGate(player,nextGate);
+						
+					}
+				}
 				break;
 			}
 		}
