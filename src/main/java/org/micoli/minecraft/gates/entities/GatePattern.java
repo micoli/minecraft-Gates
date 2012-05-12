@@ -1,5 +1,6 @@
 package org.micoli.minecraft.gates.entities;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.regex.Matcher;
@@ -8,7 +9,6 @@ import java.util.regex.Pattern;
 import org.bukkit.Material;
 import org.micoli.minecraft.gates.Gates;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GatePattern.
  */
@@ -24,7 +24,7 @@ public class GatePattern {
 	private HashMap<String, Material> blocksMap = new HashMap<String, Material>();
 	
 	/** The lines. */
-	private LinkedHashSet<String> lines;
+	private ArrayList<String> lines;
 	
 	/** The width. */
 	private int width;
@@ -76,7 +76,7 @@ public class GatePattern {
 	 *
 	 * @return the lines
 	 */
-	public LinkedHashSet<String> getLines() {
+	public ArrayList<String> getLines() {
 		return lines;
 	}
 
@@ -85,7 +85,7 @@ public class GatePattern {
 	 *
 	 * @param lines the lines to set
 	 */
-	public void setLines(LinkedHashSet<String> lines) {
+	public void setLines(ArrayList<String> lines) {
 		this.lines = lines;
 	}
 

@@ -1,6 +1,9 @@
 package org.micoli.minecraft.gates.entities;
 
+import java.util.ArrayList;
+
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -9,10 +12,15 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.micoli.minecraft.entities.QDWorldCoord;
 import org.micoli.minecraft.gates.Gates;
+import org.micoli.minecraft.utils.ChatFormater;
+import org.micoli.minecraft.utils.Json;
 
 import com.avaje.ebean.validation.Length;
 import com.avaje.ebean.validation.NotNull;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -20,15 +28,16 @@ import com.avaje.ebean.validation.NotNull;
  */
 @Entity
 @Table(name = "mrg_mrg_gateobject")
-public class GateObject {
-	
+public class Gate {
+	public Gate(){
+	}
 	/** The plugin. */
 	@Transient
 	Gates plugin;
 	
 	/** The block object. */
 	@Transient
-	Block blockObject;
+	Block tpBlock;
 
 	/**
 	 * The Enum GoalOrientation.
@@ -40,6 +49,12 @@ public class GateObject {
 		EW
 	}
 
+	@Id
+	Integer id;
+	
+	@Length(max = 100)
+	String gateName="";
+	
 	/** The height. */
 	@NotNull
 	int height;
@@ -58,9 +73,16 @@ public class GateObject {
 	@Length(max = 100)
 	String worldName="";
 	
-	/** The X,Y,Z location. */
+	/** The tpX,tpY,tpZ location. */
 	@NotNull
-	double X, Y, Z;
+	double tpX, tpY, tpZ;
+
+	/** The outX,outY,outZ location. */
+	@NotNull
+	double outX, outY, outZ;
+	
+	@NotNull
+	int outYaw=0;
 	
 	/** The pattern used for creation. */
 	@NotNull
@@ -71,12 +93,13 @@ public class GateObject {
 	@NotNull
 	@Length(max = 100)
 	String networkID="";
-
-	/**
-	 * Instantiates a new gate object.
-	 */
-	public GateObject() {
-	}
+	
+	@NotNull
+	@Length(max = 4096)
+	String nonFloodingCoordsStr="";
+	
+	@Transient
+	ArrayList<QDWorldCoord> nonFloodingCoords = new ArrayList<QDWorldCoord>();
 	
 	/**
 	 * Instantiates a new gate object.
@@ -86,26 +109,24 @@ public class GateObject {
 	 * @param gatePattern the gate pattern
 	 * @param orientation the orientation
 	 * @param worldName the world name
+	 * @param iOrientation 
 	 */
-	public GateObject(Gates plugin,Block centerBlock, GatePattern gatePattern, GateOrientation orientation,String worldName,String networkID) {
-		this.plugin = plugin;
-		this.blockObject = centerBlock;
+	public Gate(Gates plugin,Block centerBlock, GatePattern gatePattern, GateOrientation orientation,String worldName,String networkID,Location outLocation, int outYaw) {
+		setPlugin(plugin);
+		this.tpBlock = centerBlock;
 		this.width = gatePattern.getWidth();
 		this.height = gatePattern.getHeight();
 		this.orientation = orientation;
-		this.X = blockObject.getX();
-		this.Y = blockObject.getY();
-		this.Z = blockObject.getZ();
+		this.tpX = tpBlock.getX();
+		this.tpY = tpBlock.getY();
+		this.tpZ = tpBlock.getZ();
+		this.outX = outLocation.getX();
+		this.outY = outLocation.getY();
+		this.outZ = outLocation.getZ();
+		this.outYaw = outYaw;
 		this.worldName = worldName;
 		this.networkID = networkID;
 		this.pattern = gatePattern.getName();
-	}
-
-	/**
-	 * Inits the gate.
-	 */
-	public void initGate() {
-		
 	}
 
 	/**
@@ -116,7 +137,7 @@ public class GateObject {
 	 * @return the int
 	 */
 	public int xyzDistance(Location location) {
-		return (int) Math.max(Math.max(Math.abs(blockObject.getX() - blockObject.getX()), Math.abs(location.getY() - blockObject.getY())), Math.abs(location.getZ() - blockObject.getZ()));
+		return (int) Math.max(Math.max(Math.abs(tpBlock.getX() - tpBlock.getX()), Math.abs(location.getY() - tpBlock.getY())), Math.abs(location.getZ() - tpBlock.getZ()));
 	}
 
 	/**
@@ -129,7 +150,7 @@ public class GateObject {
 		Location playerLocation = player.getLocation();
 		//plugin.logger.log("test %s %s %s",player,playerLocation.toString(),blockObject.getLocation().toString());
 		if (!player.getWorld().getName().equals(worldName)){
-			plugin.logger.log("not inside world %s %s",worldName,blockObject.getLocation().toString());
+			plugin.logger.log("not inside world %s %s",worldName,tpBlock.getLocation().toString());
 			return false;
 		}
 		double X1 = playerLocation.getX(), Y1 = playerLocation.getY(), Z1 = playerLocation.getZ();
@@ -137,18 +158,18 @@ public class GateObject {
 			plugin.logger.log("not inside %s",blockObject.getLocation().toString());
 			return false;
 		}*/
-		if (Y <= Y1 && Y1 <= Y + this.height) {
+		if (tpY <= Y1 && Y1 <= tpY + this.height) {
 			//plugin.logger.log("Inside Y %f",Y1);
 			switch (orientation) {
 				case NS:
 					//plugin.logger.log("NS test player(%d -> %d,%d -> %d, %d %d %d ) W(%d) H(%d)",(int)X1,(int)X,(int)Y1,(int)Y,  (int)(Z - this.width / 2),(int)Z1,(int)(Z + this.width / 2)   ,width,height);
-					if ((Z - this.width / 2) <= Z1 && Z1 <= (Z + this.width / 2) && (int)X == (int)X1) {
+					if ((tpZ - this.width / 2) <= Z1 && Z1 <= (tpZ + this.width / 2) && (int)tpX == (int)X1) {
 						plugin.logger.log("NS inside player");
 						return true;
 					}
 				break;
 				case EW:
-					if ((X - this.width / 2) <= X1 && X1 <= (X + this.width / 2) && (int)Z == (int)Z1) {
+					if ((tpX - this.width / 2) <= X1 && X1 <= (tpX + this.width / 2) && (int)tpZ == (int)Z1) {
 						return true;
 					}
 				break;
@@ -158,24 +179,22 @@ public class GateObject {
 		return false;
 	}
 
+	private Location getOutLocation(Player player){
+		Location location = new Location(plugin.getServer().getWorld(getWorldName()),getOutX(),getOutY(),getOutZ());
+		location.setYaw(getOutYaw());
+		location.setPitch((player!=null)?player.getLocation().getPitch():0);
+		return location;
+	}
+	
 	/**
 	 * Use gate.
 	 *
 	 * @param player the player
 	 * @param nextGate 
 	 */
-	public void useGate(Player player, GateObject nextGate) {
-		player.sendMessage("Use gate "+this.toString());
-		Location targetDestination = nextGate.getBlockObject().getLocation();
-		if(nextGate.getOrientation()==GateOrientation.NS){
-			targetDestination = targetDestination.add(1, 1, 0);
-		}else{
-			targetDestination = targetDestination.add(0, 1, 1);
-		}
-		targetDestination.setPitch(player.getLocation().getPitch());
-		targetDestination.setYaw(player.getLocation().getYaw());
-		
-		player.teleport(targetDestination);
+	public void useGate(Player player, Gate nextGate) {
+		player.sendMessage(ChatFormater.format("Use gate %d",getId()));
+		player.teleport(nextGate.getOutLocation(player));
 	}
 
 	/**
@@ -187,7 +206,9 @@ public class GateObject {
 	public boolean initFromDatabase(Gates instance) {
 		plugin = instance;
 		World world = plugin.getServer().getWorld(worldName);
-		blockObject = world.getBlockAt(new Location(world,X,Y,Z));
+		tpBlock = world.getBlockAt(new Location(world,tpX,tpY,tpZ));
+		Gson gson = new Gson();
+		nonFloodingCoords=gson.fromJson(nonFloodingCoordsStr,new TypeToken<ArrayList<QDWorldCoord>>(){}.getType());
 		//if(blockObject.getTypeId()!=0){
 		initGate();
 		return true;
@@ -195,6 +216,16 @@ public class GateObject {
 		//return false;
 	}
 	
+	/**
+	 * Inits the gate.
+	 */
+	public void initGate() {
+		for(QDWorldCoord coord : nonFloodingCoords){
+			plugin.getGateManager().addNonFloodingBlocks(coord);
+		}
+		
+	}
+
 	/**
 	 * Save.
 	 */
@@ -219,19 +250,27 @@ public class GateObject {
 			String line = ((String)patterns[i]);
 			plugin.logger.log("%d -> %s",i,line);
 			for(int j=0;j<line.length();j++){
+				QDWorldCoord coord = new QDWorldCoord(worldName,0,0,0);
 				switch (orientation) {
 					case EW:
-						location = new Location(world,X-xOffset+j,Y+yOffset,Z);
+						coord.setXYZ(tpX-xOffset+j,tpY+yOffset,tpZ);
 					break;	
 					case NS:
-						location = new Location(world,X,Y+yOffset,Z-xOffset+j);
+						coord.setXYZ(tpX,tpY+yOffset,tpZ-xOffset+j);
 					break;	
 				}
+				location = new Location(world,coord.getX(),coord.getY(),coord.getZ());
 				String blockKey = line.charAt(j)+"";
 				if(gatePattern.getBlocksMap().containsKey(blockKey)){
 					world.getBlockAt(location).setType(gatePattern.getBlocksMap().get(line.charAt(j)+""));
 				}else{
-					if(blockKey.equals("-")){
+					if(blockKey.equals("#")){
+					}else if(blockKey.equals("_")){
+						if(plugin.isWithFlowControl()){
+							world.getBlockAt(location).setType(Material.WATER);
+						}
+						nonFloodingCoords.add(coord);
+					}else if(blockKey.equals("-")){
 						world.getBlockAt(location).setType(Material.AIR);
 					}else{
 						if(!blockKey.equals("!")){
@@ -239,8 +278,10 @@ public class GateObject {
 						}
 					}
 				}
+				nonFloodingCoords.add(coord);
 			}
 		}
+		this.nonFloodingCoordsStr=Json.exportObjectToJson(nonFloodingCoords);
 	}
 
 	/**
@@ -260,15 +301,141 @@ public class GateObject {
 	/**
 	 * @return the blockObject
 	 */
-	public Block getBlockObject() {
-		return blockObject;
+	public Block getTpBlock() {
+		return tpBlock;
 	}
 
 	/**
 	 * @param blockObject the blockObject to set
 	 */
-	public void setBlockObject(Block blockObject) {
-		this.blockObject = blockObject;
+	public void setTpBlock(Block blockObject) {
+		this.tpBlock = blockObject;
+	}
+
+	/**
+	 * @return the id
+	 */
+	public Integer getId() {
+		return id;
+	}
+
+	/**
+	 * @param id the id to set
+	 */
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return the gateName
+	 */
+	public String getGateName() {
+		return gateName;
+	}
+
+	/**
+	 * @param gateName the gateName to set
+	 */
+	public void setGateName(String gateName) {
+		this.gateName = gateName;
+	}
+
+	/**
+	 * @return the tpX
+	 */
+	public double getTpX() {
+		return tpX;
+	}
+
+	/**
+	 * @param tpX the tpX to set
+	 */
+	public void setTpX(double tpX) {
+		this.tpX = tpX;
+	}
+
+	/**
+	 * @return the tpY
+	 */
+	public double getTpY() {
+		return tpY;
+	}
+
+	/**
+	 * @param tpY the tpY to set
+	 */
+	public void setTpY(double tpY) {
+		this.tpY = tpY;
+	}
+
+	/**
+	 * @return the tpZ
+	 */
+	public double getTpZ() {
+		return tpZ;
+	}
+
+	/**
+	 * @param tpZ the tpZ to set
+	 */
+	public void setTpZ(double tpZ) {
+		this.tpZ = tpZ;
+	}
+
+	/**
+	 * @return the outX
+	 */
+	public double getOutX() {
+		return outX;
+	}
+
+	/**
+	 * @param outX the outX to set
+	 */
+	public void setOutX(double outX) {
+		this.outX = outX;
+	}
+
+	/**
+	 * @return the outY
+	 */
+	public double getOutY() {
+		return outY;
+	}
+
+	/**
+	 * @param outY the outY to set
+	 */
+	public void setOutY(double outY) {
+		this.outY = outY;
+	}
+
+	/**
+	 * @return the outZ
+	 */
+	public double getOutZ() {
+		return outZ;
+	}
+
+	/**
+	 * @param outZ the outZ to set
+	 */
+	public void setOutZ(double outZ) {
+		this.outZ = outZ;
+	}
+
+	/**
+	 * @return the outYaw
+	 */
+	public int getOutYaw() {
+		return outYaw;
+	}
+
+	/**
+	 * @param outYaw the outYaw to set
+	 */
+	public void setOutYaw(int outYaw) {
+		this.outYaw = outYaw;
 	}
 
 	/**
@@ -331,42 +498,42 @@ public class GateObject {
 	 * @return the x
 	 */
 	public double getX() {
-		return X;
+		return tpX;
 	}
 
 	/**
 	 * @param x the x to set
 	 */
 	public void setX(double x) {
-		X = x;
+		tpX = x;
 	}
 
 	/**
 	 * @return the y
 	 */
 	public double getY() {
-		return Y;
+		return tpY;
 	}
 
 	/**
 	 * @param y the y to set
 	 */
 	public void setY(double y) {
-		Y = y;
+		tpY = y;
 	}
 
 	/**
 	 * @return the z
 	 */
 	public double getZ() {
-		return Z;
+		return tpZ;
 	}
 
 	/**
 	 * @param z the z to set
 	 */
 	public void setZ(double z) {
-		Z = z;
+		tpZ = z;
 	}
 
 	/**
@@ -395,5 +562,33 @@ public class GateObject {
 	 */
 	public void setNetworkID(String networkID) {
 		this.networkID = networkID;
+	}
+
+	/**
+	 * @return the nonFloodingCoordsStr
+	 */
+	public String getNonFloodingCoordsStr() {
+		return nonFloodingCoordsStr;
+	}
+
+	/**
+	 * @param nonFloodingCoordsStr the nonFloodingCoordsStr to set
+	 */
+	public void setNonFloodingCoordsStr(String nonFloodingCoordsStr) {
+		this.nonFloodingCoordsStr = nonFloodingCoordsStr;
+	}
+
+	/**
+	 * @param nonFloodingCoords the nonFloodingCoords to set
+	 */
+	public void setNonFloodingCoords(ArrayList<QDWorldCoord> nonFloodingCoords) {
+		this.nonFloodingCoords = nonFloodingCoords;
+	}
+
+	/**
+	 * @return the nonFloodingCoords
+	 */
+	public ArrayList<QDWorldCoord> getNonFloodingCoords() {
+		return nonFloodingCoords;
 	}
 }

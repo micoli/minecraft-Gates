@@ -73,18 +73,9 @@
               <shadedArtifactAttached>false</shadedArtifactAttached>
               <artifactSet>
                 <includes>
-                  <include>org.micoli.minecraft:morg-utils:jar:*</include>
                   <include>com.lennardf1989:bukkitex:jar:*</include>
                 </includes>
               </artifactSet>
-              <filters>
-                <filter>
-                  <artifact>org.micoli.minecraft:morg-utils:jar:*</artifact>
-                  <includes>
-                    <include>org/micoli/minecraft/**</include>
-                  </includes>
-                </filter>
-              </filters>
             </configuration>
           </execution>
         </executions>
@@ -138,6 +129,12 @@
       <groupId>org.bukkit</groupId>
       <artifactId>craftbukkit</artifactId>
       <version>1.2.4-R0.1-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.micoli.minecraft</groupId>
+      <artifactId>morg-utils</artifactId>
+      <version>0.5.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

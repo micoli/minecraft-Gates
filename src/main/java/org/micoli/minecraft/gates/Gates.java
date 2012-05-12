@@ -1,10 +1,6 @@
 package org.micoli.minecraft.gates;
 
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,13 +10,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.micoli.minecraft.bukkit.QDBukkitPlugin;
 import org.micoli.minecraft.bukkit.QDCommand;
-import org.micoli.minecraft.gates.entities.GateObject;
-import org.micoli.minecraft.gates.entities.GateObject.GateOrientation;
+import org.micoli.minecraft.gates.entities.Gate;
+import org.micoli.minecraft.gates.entities.Gate.GateOrientation;
 import org.micoli.minecraft.gates.entities.GatePattern;
 import org.micoli.minecraft.gates.listeners.GatesPlayerListener;
 import org.micoli.minecraft.gates.managers.GateManager;
 import org.micoli.minecraft.gates.managers.GatePatternManager;
 import org.micoli.minecraft.gates.managers.GatesCommandManager;
+import org.micoli.minecraft.utils.FileUtils;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -36,6 +33,9 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 
 	/** The max gate height. */
 	private int maxGateHeight = 15;
+
+	/** The does water flood be controlled. */
+	private boolean withFlowControl = false;
 
 	/** The gate manager. */
 	private GateManager gateManager;
@@ -68,9 +68,14 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 
 		configFile.set("gates.maxHeight", configFile.getDouble("gates.maxHeight", getMaxGateHeight()));
 		setMaxGateHeight((int) configFile.getDouble("gates.maxHeight"));
-		gateManager = new GateManager(instance);
 
-		initializeFileFromRessource("GatePatterns.yml");
+		configFile.set("gates.flowControl", configFile.getBoolean("gates.flowControl", isWithFlowControl()));
+		setWithFlowControl( configFile.getBoolean("gates.flowControl"));
+
+		gateManager = new GateManager(instance);
+		gateManager.readGatesFromDatabase();
+
+		FileUtils.initializeFileFromRessource(this,"GatePatterns.yml",true);
 		gatePatternManager = GatePatternManager.readGatesPattern(instance, "GatePatterns.yml");
 		
 		getPm().registerEvents(new GatesPlayerListener(this),this);
@@ -79,38 +84,6 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		saveConfig();
 
 		executor = new GatesCommandManager(this, new Class[] { getClass() });
-	}
-
-	/**
-	 * Initialize file from ressource.
-	 * 
-	 * @param fileName
-	 *            the file name
-	 */
-	private void initializeFileFromRessource(String fileName) {
-		File patternFile = new File(getDataFolder(), fileName);
-		if (!patternFile.exists() || true) {
-			try {
-				InputStream isr = getClass().getClassLoader().getResourceAsStream(fileName);
-				File fileOut = new File(getDataFolder().getAbsolutePath() + "/" + fileName);
-				FileOutputStream fop = new FileOutputStream(fileOut);
-				if (!fileOut.exists()) {
-					fileOut.createNewFile();
-				}
-				try {
-					byte[] buf = new byte[512];
-					int len;
-					while ((len = isr.read(buf)) > 0) {
-						fop.write(buf, 0, len);
-					}
-				} finally {
-					isr.close();
-				}
-			} catch (IOException e) {
-				logger.dumpStackTrace(e);
-			}
-		}
-
 	}
 
 	/**
@@ -170,6 +143,20 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		this.gatePatternManager = gatePatternManager;
 	}
 
+	/**
+	 * @return the withFlowControl
+	 */
+	public boolean isWithFlowControl() {
+		return withFlowControl;
+	}
+
+	/**
+	 * @param withFlowControl the withFlowControl to set
+	 */
+	public void setWithFlowControl(boolean withFlowControl) {
+		this.withFlowControl = withFlowControl;
+	}
+
 	/*
 	 * 
 	 * @see org.micoli.minecraft.bukkit.QDBukkitPlugin#getDatabaseORMClasses()
@@ -181,7 +168,7 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	 */
 	protected java.util.List<Class<?>> getDatabaseORMClasses() {
 		List<Class<?>> list = new ArrayList<Class<?>>();
-		list.add(GateObject.class);
+		list.add(Gate.class);
 		return list;
 	};
 
@@ -225,8 +212,9 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		try {
 			GatePattern gatePattern = this.getGatePatternManager().getGatePatternFromName(args[1]);
 
-			GateObject gate = new GateObject(instance, block, gatePattern, orientation, player.getWorld().getName(), args[2]);
+			Gate gate = new Gate(instance, block, gatePattern, orientation, player.getWorld().getName(), args[2],player.getLocation(),(iOrientation) % 360);
 			gate.draw(gatePattern);
+			gate.initGate();
 			gate.save();
 			this.getGateManager().addGate(gate);
 			sendComments((Player) sender, "Gate created", false);

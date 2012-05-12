@@ -7,9 +7,12 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.micoli.minecraft.entities.QDWorldCoord;
 import org.micoli.minecraft.gates.Gates;
-import org.micoli.minecraft.gates.entities.GateObject;
+import org.micoli.minecraft.gates.entities.Gate;
 
 /**
  * The Class GateManager.
@@ -20,8 +23,9 @@ public class GateManager {
 	private Gates plugin;
 	
 	/** The internal array of parcels. */
-	private Set<GateObject> aGates;
-	private Map<String,LinkedList<GateObject>> aGatesNetwork = new HashMap<String,LinkedList<GateObject>>();
+	private Set<Gate> aGates;
+	private Map<String,LinkedList<Gate>> aGatesNetwork = new HashMap<String,LinkedList<Gate>>();
+	private HashSet<QDWorldCoord> nonFloodingBlocks = new HashSet<QDWorldCoord>();
 
 	/**
 	 * Instantiates a new parcel manager.
@@ -30,11 +34,13 @@ public class GateManager {
 	 */
 	public GateManager(Gates instance) {
 		this.plugin = instance;
-		aGates = new HashSet<GateObject>();
-		Iterator<GateObject> gateIterator = plugin.getStaticDatabase().find(GateObject.class).findList().iterator();
+	}
+	public void readGatesFromDatabase(){
+		aGates = new HashSet<Gate>();
+		Iterator<Gate> gateIterator = plugin.getStaticDatabase().find(Gate.class).findList().iterator();
 		if (gateIterator.hasNext()) {
 			while (gateIterator.hasNext()) {
-				GateObject gate = gateIterator.next();
+				Gate gate = gateIterator.next();
 				if(gate.initFromDatabase(plugin)){
 					plugin.logger.log(gate.toString());
 					addGate(gate);
@@ -43,32 +49,22 @@ public class GateManager {
 		}
 	}
 	
-	public void addGate(GateObject gateObject){
-		aGates.add(gateObject);
-		String networkID = gateObject.getNetworkID();
+	public void addGate(Gate gate){
+		aGates.add(gate);
+		String networkID = gate.getNetworkID();
 		if(!aGatesNetwork.containsKey(networkID)){
-			aGatesNetwork.put(networkID,new LinkedList<GateObject>());
+			aGatesNetwork.put(networkID,new LinkedList<Gate>());
 		}
-		aGatesNetwork.get(networkID).add(gateObject);
+		aGatesNetwork.get(networkID).add(gate);
 	}
 	
-	/**
-	 * Gets the a gates.
-	 *
-	 * @return the aParcel
-	 */
-	public Set<GateObject> getaGates() {
-		return aGates;
-	}
-
 	/**
 	 * Player move.
 	 *
 	 * @param player the player
 	 */
 	public void playerMove(Player player) {
-		//plugin.logger.log("%d",aGates.size());
-		for(GateObject gate : aGates){
+		for(Gate gate : aGates){
 			if(gate.isPlayerInside(player)){
 				String netID=null;
 				for(String key:aGatesNetwork.keySet()){
@@ -79,12 +75,12 @@ public class GateManager {
 				}
 				if(netID!=null){
 					player.sendMessage("Using network : "+netID);
-					LinkedList<GateObject> network = aGatesNetwork.get(netID);
+					LinkedList<Gate> network = aGatesNetwork.get(netID);
 					if (network.size()<2){
 						player.sendMessage("Not enough gates in network "+netID);
 					}else{
 						int idx = network.indexOf(gate);
-						GateObject nextGate = null;
+						Gate nextGate = null;
 						if(network.getLast().equals(gate)){
 							nextGate = network.getFirst();
 						}else{
@@ -97,5 +93,18 @@ public class GateManager {
 				break;
 			}
 		}
+	}
+	
+	public void addNonFloodingBlocks(QDWorldCoord coord){
+		nonFloodingBlocks.add(coord);
+	}
+
+	public boolean isNonFloodingBlock(Block block) {
+		if (!(block.getType().equals(Material.WATER)||block.getType().equals(Material.STATIONARY_WATER))){
+			return false;
+		}
+		QDWorldCoord coord = new QDWorldCoord(block.getLocation());
+		plugin.logger.log("%d=>%s %d",nonFloodingBlocks.size(),coord.toString(),(nonFloodingBlocks.contains(coord)?1:0));
+		return nonFloodingBlocks.contains(coord);
 	}
 }

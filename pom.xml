@@ -110,18 +110,9 @@
 							<shadedArtifactAttached>false</shadedArtifactAttached>
 							<artifactSet>
 								<includes>
-									<include>org.micoli.minecraft:morg-utils:jar:*</include>
 									<include>com.lennardf1989:bukkitex:jar:*</include>
 								</includes>
 							</artifactSet>
-							<filters>
-								<filter>
-									<artifact>org.micoli.minecraft:morg-utils:jar:*</artifact>
-									<includes>
-										<include>org/micoli/minecraft/**</include>
-									</includes>
-								</filter>
-							</filters>
 						</configuration>
 					</execution>
 				</executions>

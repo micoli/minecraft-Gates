@@ -7,7 +7,21 @@ patterns :
     - d_86
     lines :
     - aaaaa
-    - a---a
-    - a---a
+    - a___a
+    - a___a
     - bd-db
-    - --!--
+    - ##!##
+  - name   : pattern02
+    blocks :
+    - a_7
+    - b_56
+    - c_73
+    - d_86
+    lines :
+    - aaaaaaaaa
+    - a_______a
+    - a_______a
+    - a_______a
+    - a_______a
+    - bd_____db
+    - ####!####
