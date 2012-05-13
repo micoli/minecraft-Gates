@@ -262,9 +262,18 @@ public class Gate {
 				location = new Location(world,coord.getX(),coord.getY(),coord.getZ());
 				String blockKey = line.charAt(j)+"";
 				if(gatePattern.getBlocksMap().containsKey(blockKey)){
-					world.getBlockAt(location).setType(gatePattern.getBlocksMap().get(line.charAt(j)+""));
+					Material material = gatePattern.getBlocksMap().get(line.charAt(j)+"");
+					if(plugin.isWithFlowControl()){
+						world.getBlockAt(location).setType(material);
+					}else{
+						if (material.equals(Material.WATER) || material.equals(Material.STATIONARY_WATER)){
+							plugin.logger.log("can't add water without enabling flow control");
+						}else{
+							world.getBlockAt(location).setType(material);
+						}
+					}
 				}else{
-					if(blockKey.equals("#")){
+					if(blockKey.equals("=")){
 					}else if(blockKey.equals("_")){
 						if(plugin.isWithFlowControl()){
 							world.getBlockAt(location).setType(Material.WATER);

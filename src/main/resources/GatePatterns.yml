@@ -10,7 +10,7 @@ patterns :
     - a___a
     - a___a
     - bd-db
-    - ##!##
+    - ==!==
   - name   : pattern02
     blocks :
     - a_7
@@ -24,4 +24,4 @@ patterns :
     - a_______a
     - a_______a
     - bd_____db
-    - ####!####
+    - ====!====

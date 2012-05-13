@@ -160,7 +160,9 @@ public class GatePattern {
 		
 		this.width = 0;
 		for (String txt : lines) {
-			this.width = Math.max(this.width, txt.length());
+			if(txt!=null){
+				this.width = Math.max(this.width, txt.length());
+			}
 		}
 		this.height = lines.size();
 		Object[] patterns= lines.toArray();

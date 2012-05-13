@@ -42,7 +42,7 @@ public class GateManager {
 			while (gateIterator.hasNext()) {
 				Gate gate = gateIterator.next();
 				if(gate.initFromDatabase(plugin)){
-					plugin.logger.log(gate.toString());
+					plugin.logger.log("loading gate %3d:%20s (%5d,%5d,%5d)",gate.getId(),gate.getNetworkID(),(int)gate.getTpX(),(int)gate.getTpY(),(int)gate.getTpZ());
 					addGate(gate);
 				}
 			}
