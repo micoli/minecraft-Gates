@@ -20,9 +20,8 @@ import org.micoli.minecraft.utils.FileUtils;
 import org.micoli.minecraft.utils.QDOrientation;
 import org.micoli.minecraft.utils.QDOrientation.MultipleOrientations;
 
-// TODO: Auto-generated Javadoc
 /**
- * The Class LocalPlan.
+ * The Plugin Class LocalPlan.
  */
 public class Gates extends QDBukkitPlugin implements ActionListener {
 

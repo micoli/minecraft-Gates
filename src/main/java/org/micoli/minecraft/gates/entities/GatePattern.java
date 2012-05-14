@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 import org.bukkit.Material;
 import org.micoli.minecraft.gates.Gates;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GatePattern.
  */

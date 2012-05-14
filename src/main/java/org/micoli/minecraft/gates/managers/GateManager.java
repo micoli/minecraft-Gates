@@ -15,7 +15,6 @@ import org.micoli.minecraft.gates.Gates;
 import org.micoli.minecraft.gates.entities.Gate;
 import org.micoli.minecraft.utils.Task;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GateManager.
  */

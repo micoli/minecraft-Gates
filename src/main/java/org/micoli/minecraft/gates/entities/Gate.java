@@ -24,7 +24,6 @@ import com.avaje.ebean.validation.NotNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GateObject.
  */
