@@ -8,6 +8,7 @@ import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.micoli.minecraft.gates.Gates;
 
+// TODO: Auto-generated Javadoc
 /**
  * The listener interface for receiving QDPlayer events. The class that is
  * interested in processing a QDPlayer event implements this interface, and the
@@ -33,12 +34,17 @@ public class GatesPlayerListener implements Listener {
 		this.plugin = plugin;
 	}
 
+	/**
+	 * On block from to.
+	 *
+	 * @param event the event
+	 */
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onBlockFromTo(BlockFromToEvent event) {
 		if(!plugin.isWithFlowControl()){
 			return;
 		}
-		event.setCancelled(true);
+		//event.setCancelled(true);
 		if (event.isCancelled())
 			return;
 

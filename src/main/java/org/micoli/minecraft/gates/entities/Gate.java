@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -16,6 +17,7 @@ import org.micoli.minecraft.entities.QDWorldCoord;
 import org.micoli.minecraft.gates.Gates;
 import org.micoli.minecraft.utils.ChatFormater;
 import org.micoli.minecraft.utils.Json;
+import org.micoli.minecraft.utils.QDOrientation.CardinalDualOrientation;
 
 import com.avaje.ebean.validation.Length;
 import com.avaje.ebean.validation.NotNull;
@@ -29,6 +31,10 @@ import com.google.gson.reflect.TypeToken;
 @Entity
 @Table(name = "mrg_mrg_gateobject")
 public class Gate {
+	
+	/**
+	 * Instantiates a new gate.
+	 */
 	public Gate(){
 	}
 	/** The plugin. */
@@ -39,19 +45,11 @@ public class Gate {
 	@Transient
 	Block tpBlock;
 
-	/**
-	 * The Enum GoalOrientation.
-	 */
-	public enum GateOrientation {
-		/** The NS. */
-		NS,
-		/** The EW. */
-		EW
-	}
-
+	/** The id. */
 	@Id
 	Integer id;
 	
+	/** The gate name. */
 	@Length(max = 100)
 	String gateName="";
 	
@@ -66,7 +64,7 @@ public class Gate {
 	/** The orientation. */
 	@NotNull
 	@Length(max = 20)
-	GateOrientation orientation;
+	CardinalDualOrientation orientation;
 
 	/** The world name. */
 	@NotNull
@@ -81,6 +79,7 @@ public class Gate {
 	@NotNull
 	double outX, outY, outZ;
 	
+	/** The out yaw. */
 	@NotNull
 	int outYaw=0;
 	
@@ -94,10 +93,12 @@ public class Gate {
 	@Length(max = 100)
 	String networkID="";
 	
+	/** The non flooding coords str. */
 	@NotNull
-	@Length(max = 4096)
+	@Lob
 	String nonFloodingCoordsStr="";
 	
+	/** The non flooding coords. */
 	@Transient
 	ArrayList<QDWorldCoord> nonFloodingCoords = new ArrayList<QDWorldCoord>();
 	
@@ -109,9 +110,11 @@ public class Gate {
 	 * @param gatePattern the gate pattern
 	 * @param orientation the orientation
 	 * @param worldName the world name
-	 * @param iOrientation 
+	 * @param networkID the network id
+	 * @param outLocation the out location
+	 * @param outYaw the out yaw
 	 */
-	public Gate(Gates plugin,Block centerBlock, GatePattern gatePattern, GateOrientation orientation,String worldName,String networkID,Location outLocation, int outYaw) {
+	public Gate(Gates plugin,Block centerBlock, GatePattern gatePattern, CardinalDualOrientation orientation,String worldName,String networkID,Location outLocation, int outYaw) {
 		setPlugin(plugin);
 		this.tpBlock = centerBlock;
 		this.width = gatePattern.getWidth();
@@ -179,6 +182,12 @@ public class Gate {
 		return false;
 	}
 
+	/**
+	 * Gets the out location.
+	 *
+	 * @param player the player
+	 * @return the out location
+	 */
 	private Location getOutLocation(Player player){
 		Location location = new Location(plugin.getServer().getWorld(getWorldName()),getOutX(),getOutY(),getOutZ());
 		location.setYaw(getOutYaw());
@@ -190,7 +199,7 @@ public class Gate {
 	 * Use gate.
 	 *
 	 * @param player the player
-	 * @param nextGate 
+	 * @param nextGate the next gate
 	 */
 	public void useGate(Player player, Gate nextGate) {
 		player.sendMessage(ChatFormater.format("Use gate %d",getId()));
@@ -209,6 +218,9 @@ public class Gate {
 		tpBlock = world.getBlockAt(new Location(world,tpX,tpY,tpZ));
 		Gson gson = new Gson();
 		nonFloodingCoords=gson.fromJson(nonFloodingCoordsStr,new TypeToken<ArrayList<QDWorldCoord>>(){}.getType());
+		//for(QDWorldCoord coord:nonFloodingCoords){
+		//	plugin.logger.log("%10s %s %d %d %d",this.getGateName(),coord.getWorld(),coord.getX(),coord.getY(),coord.getZ());
+		//}
 		//if(blockObject.getTypeId()!=0){
 		initGate();
 		return true;
@@ -220,10 +232,11 @@ public class Gate {
 	 * Inits the gate.
 	 */
 	public void initGate() {
-		for(QDWorldCoord coord : nonFloodingCoords){
-			plugin.getGateManager().addNonFloodingBlocks(coord);
+		if(nonFloodingCoords!=null){
+			for(QDWorldCoord coord : nonFloodingCoords){
+				plugin.getGateManager().addNonFloodingBlocks(coord);
+			}
 		}
-		
 	}
 
 	/**
@@ -234,7 +247,7 @@ public class Gate {
 	}
 
 	/**
-	 * Draw the gate
+	 * Draw the gate.
 	 *
 	 * @param gatePattern the gate pattern
 	 */
@@ -242,12 +255,12 @@ public class Gate {
 		World world = plugin.getServer().getWorld(worldName);
 		int xOffset = gatePattern.getxOffset();
 		int yOffset=0;
-		Object[] patterns= gatePattern.getLines().toArray();
+		ArrayList<String> patterns= gatePattern.getLines();
 		Location location = new Location(world,0,0,0);
 		plugin.logger.log(gatePattern.getName());
-		for(int i=0;i<patterns.length;i++){
-			yOffset = patterns.length-i-1;
-			String line = ((String)patterns[i]);
+		for(int i=0;i<patterns.size();i++){
+			yOffset = patterns.size()-i-1;
+			String line = patterns.get(i);
 			plugin.logger.log("%d -> %s",i,line);
 			for(int j=0;j<line.length();j++){
 				QDWorldCoord coord = new QDWorldCoord(worldName,0,0,0);
@@ -294,6 +307,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the plugin.
+	 *
 	 * @return the plugin
 	 */
 	public Gates getPlugin() {
@@ -301,6 +316,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the plugin.
+	 *
 	 * @param plugin the plugin to set
 	 */
 	public void setPlugin(Gates plugin) {
@@ -308,6 +325,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the tp block.
+	 *
 	 * @return the blockObject
 	 */
 	public Block getTpBlock() {
@@ -315,6 +334,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the tp block.
+	 *
 	 * @param blockObject the blockObject to set
 	 */
 	public void setTpBlock(Block blockObject) {
@@ -322,6 +343,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the id.
+	 *
 	 * @return the id
 	 */
 	public Integer getId() {
@@ -329,6 +352,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the id.
+	 *
 	 * @param id the id to set
 	 */
 	public void setId(Integer id) {
@@ -336,6 +361,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the gate name.
+	 *
 	 * @return the gateName
 	 */
 	public String getGateName() {
@@ -343,6 +370,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the gate name.
+	 *
 	 * @param gateName the gateName to set
 	 */
 	public void setGateName(String gateName) {
@@ -350,6 +379,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the tp x.
+	 *
 	 * @return the tpX
 	 */
 	public double getTpX() {
@@ -357,6 +388,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the tp x.
+	 *
 	 * @param tpX the tpX to set
 	 */
 	public void setTpX(double tpX) {
@@ -364,6 +397,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the tp y.
+	 *
 	 * @return the tpY
 	 */
 	public double getTpY() {
@@ -371,6 +406,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the tp y.
+	 *
 	 * @param tpY the tpY to set
 	 */
 	public void setTpY(double tpY) {
@@ -378,6 +415,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the tp z.
+	 *
 	 * @return the tpZ
 	 */
 	public double getTpZ() {
@@ -385,6 +424,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the tp z.
+	 *
 	 * @param tpZ the tpZ to set
 	 */
 	public void setTpZ(double tpZ) {
@@ -392,6 +433,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the out x.
+	 *
 	 * @return the outX
 	 */
 	public double getOutX() {
@@ -399,6 +442,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the out x.
+	 *
 	 * @param outX the outX to set
 	 */
 	public void setOutX(double outX) {
@@ -406,6 +451,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the out y.
+	 *
 	 * @return the outY
 	 */
 	public double getOutY() {
@@ -413,6 +460,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the out y.
+	 *
 	 * @param outY the outY to set
 	 */
 	public void setOutY(double outY) {
@@ -420,6 +469,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the out z.
+	 *
 	 * @return the outZ
 	 */
 	public double getOutZ() {
@@ -427,6 +478,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the out z.
+	 *
 	 * @param outZ the outZ to set
 	 */
 	public void setOutZ(double outZ) {
@@ -434,6 +487,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the out yaw.
+	 *
 	 * @return the outYaw
 	 */
 	public int getOutYaw() {
@@ -441,6 +496,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the out yaw.
+	 *
 	 * @param outYaw the outYaw to set
 	 */
 	public void setOutYaw(int outYaw) {
@@ -448,6 +505,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the height.
+	 *
 	 * @return the height
 	 */
 	public int getHeight() {
@@ -455,6 +514,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the height.
+	 *
 	 * @param height the height to set
 	 */
 	public void setHeight(int height) {
@@ -462,6 +523,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the width.
+	 *
 	 * @return the width
 	 */
 	public int getWidth() {
@@ -469,6 +532,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the width.
+	 *
 	 * @param width the width to set
 	 */
 	public void setWidth(int width) {
@@ -476,20 +541,26 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the orientation.
+	 *
 	 * @return the orientation
 	 */
-	public GateOrientation getOrientation() {
+	public CardinalDualOrientation getOrientation() {
 		return orientation;
 	}
 
 	/**
+	 * Sets the orientation.
+	 *
 	 * @param orientation the orientation to set
 	 */
-	public void setOrientation(GateOrientation orientation) {
+	public void setOrientation(CardinalDualOrientation orientation) {
 		this.orientation = orientation;
 	}
 
 	/**
+	 * Gets the world name.
+	 *
 	 * @return the worldName
 	 */
 	public String getWorldName() {
@@ -497,6 +568,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the world name.
+	 *
 	 * @param worldName the worldName to set
 	 */
 	public void setWorldName(String worldName) {
@@ -504,6 +577,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the x.
+	 *
 	 * @return the x
 	 */
 	public double getX() {
@@ -511,6 +586,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the x.
+	 *
 	 * @param x the x to set
 	 */
 	public void setX(double x) {
@@ -518,6 +595,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the y.
+	 *
 	 * @return the y
 	 */
 	public double getY() {
@@ -525,6 +604,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the y.
+	 *
 	 * @param y the y to set
 	 */
 	public void setY(double y) {
@@ -532,6 +613,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the z.
+	 *
 	 * @return the z
 	 */
 	public double getZ() {
@@ -539,6 +622,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the z.
+	 *
 	 * @param z the z to set
 	 */
 	public void setZ(double z) {
@@ -546,6 +631,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the pattern.
+	 *
 	 * @return the pattern
 	 */
 	public String getPattern() {
@@ -553,6 +640,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the pattern.
+	 *
 	 * @param pattern the pattern to set
 	 */
 	public void setPattern(String pattern) {
@@ -560,6 +649,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the network id.
+	 *
 	 * @return the networkID
 	 */
 	public String getNetworkID() {
@@ -567,6 +658,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the network id.
+	 *
 	 * @param networkID the networkID to set
 	 */
 	public void setNetworkID(String networkID) {
@@ -574,6 +667,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the non flooding coords str.
+	 *
 	 * @return the nonFloodingCoordsStr
 	 */
 	public String getNonFloodingCoordsStr() {
@@ -581,6 +676,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the non flooding coords str.
+	 *
 	 * @param nonFloodingCoordsStr the nonFloodingCoordsStr to set
 	 */
 	public void setNonFloodingCoordsStr(String nonFloodingCoordsStr) {
@@ -588,6 +685,8 @@ public class Gate {
 	}
 
 	/**
+	 * Sets the non flooding coords.
+	 *
 	 * @param nonFloodingCoords the nonFloodingCoords to set
 	 */
 	public void setNonFloodingCoords(ArrayList<QDWorldCoord> nonFloodingCoords) {
@@ -595,6 +694,8 @@ public class Gate {
 	}
 
 	/**
+	 * Gets the non flooding coords.
+	 *
 	 * @return the nonFloodingCoords
 	 */
 	public ArrayList<QDWorldCoord> getNonFloodingCoords() {

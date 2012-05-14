@@ -11,13 +11,14 @@ import org.bukkit.entity.Player;
 import org.micoli.minecraft.bukkit.QDBukkitPlugin;
 import org.micoli.minecraft.bukkit.QDCommand;
 import org.micoli.minecraft.gates.entities.Gate;
-import org.micoli.minecraft.gates.entities.Gate.GateOrientation;
 import org.micoli.minecraft.gates.entities.GatePattern;
 import org.micoli.minecraft.gates.listeners.GatesPlayerListener;
 import org.micoli.minecraft.gates.managers.GateManager;
 import org.micoli.minecraft.gates.managers.GatePatternManager;
 import org.micoli.minecraft.gates.managers.GatesCommandManager;
 import org.micoli.minecraft.utils.FileUtils;
+import org.micoli.minecraft.utils.QDOrientation;
+import org.micoli.minecraft.utils.QDOrientation.MultipleOrientations;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -36,6 +37,9 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 
 	/** The does water flood be controlled. */
 	private boolean withFlowControl = false;
+	
+	/** The gate cool down. */
+	private int gateCoolDown = 20;
 
 	/** The gate manager. */
 	private GateManager gateManager;
@@ -71,6 +75,9 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 
 		configFile.set("gates.flowControl", configFile.getBoolean("gates.flowControl", isWithFlowControl()));
 		setWithFlowControl( configFile.getBoolean("gates.flowControl"));
+
+		configFile.set("gates.gateCoolDown", configFile.getInt("gates.gateCoolDown", getGateCoolDown()));
+		setGateCoolDown( configFile.getInt("gates.gateCoolDown"));
 
 		gateManager = new GateManager(instance);
 		gateManager.readGatesFromDatabase();
@@ -144,6 +151,8 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	}
 
 	/**
+	 * Checks if is with flow control.
+	 *
 	 * @return the withFlowControl
 	 */
 	public boolean isWithFlowControl() {
@@ -151,10 +160,30 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	}
 
 	/**
+	 * Sets the with flow control.
+	 *
 	 * @param withFlowControl the withFlowControl to set
 	 */
 	public void setWithFlowControl(boolean withFlowControl) {
 		this.withFlowControl = withFlowControl;
+	}
+
+	/**
+	 * Gets the gate cool down.
+	 *
+	 * @return the gateCoolDown
+	 */
+	public final int getGateCoolDown() {
+		return gateCoolDown;
+	}
+
+	/**
+	 * Sets the gate cool down.
+	 *
+	 * @param gateCoolDown the gateCoolDown to set
+	 */
+	public final void setGateCoolDown(int gateCoolDown) {
+		this.gateCoolDown = gateCoolDown;
 	}
 
 	/*
@@ -190,29 +219,11 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	public void cmdGates(CommandSender sender, Command command, String label, String[] args) throws Exception {
 		Player player = ((Player) sender);
 		Block block = player.getTargetBlock(null, 50);
-		int iOrientation = (int) (player.getLocation().getYaw() + 180) % 360;
-		GateOrientation orientation = GateOrientation.NS;
-		String facing = "N";
-		if (iOrientation < 45 + 0 * 90) {
-			facing = "N";
-			orientation = GateOrientation.EW;
-		} else if (iOrientation < 45 + 1 * 90) {
-			facing = "E";
-			orientation = GateOrientation.NS;
-		} else if (iOrientation < 45 + 2 * 90) {
-			facing = "S";
-			orientation = GateOrientation.EW;
-		} else if (iOrientation < 45 + 3 * 90) {
-			facing = "W";
-			orientation = GateOrientation.NS;
-		}
-
-		logger.log("Facing %s,%s", facing, orientation.toString());
-
+		MultipleOrientations orientations = QDOrientation.getOrientations(player);
 		try {
 			GatePattern gatePattern = this.getGatePatternManager().getGatePatternFromName(args[1]);
 
-			Gate gate = new Gate(instance, block, gatePattern, orientation, player.getWorld().getName(), args[2],player.getLocation(),(iOrientation) % 360);
+			Gate gate = new Gate(instance, block, gatePattern, orientations.getCardinalDualOrientation(), player.getWorld().getName(), args[2],player.getLocation(),(orientations.getAngle()) % 360);
 			gate.draw(gatePattern);
 			gate.initGate();
 			gate.save();

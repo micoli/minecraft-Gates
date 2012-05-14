@@ -13,7 +13,9 @@ import org.bukkit.entity.Player;
 import org.micoli.minecraft.entities.QDWorldCoord;
 import org.micoli.minecraft.gates.Gates;
 import org.micoli.minecraft.gates.entities.Gate;
+import org.micoli.minecraft.utils.Task;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class GateManager.
  */
@@ -24,9 +26,15 @@ public class GateManager {
 	
 	/** The internal array of parcels. */
 	private Set<Gate> aGates;
+	
+	/** The a gates network. */
 	private Map<String,LinkedList<Gate>> aGatesNetwork = new HashMap<String,LinkedList<Gate>>();
+	
+	/** The non flooding blocks. */
 	private HashSet<QDWorldCoord> nonFloodingBlocks = new HashSet<QDWorldCoord>();
-
+	
+	/** The cooldowns. */
+	private HashSet<String> cooldowns = new HashSet<String>();
 	/**
 	 * Instantiates a new parcel manager.
 	 *
@@ -35,6 +43,10 @@ public class GateManager {
 	public GateManager(Gates instance) {
 		this.plugin = instance;
 	}
+	
+	/**
+	 * Read gates from database.
+	 */
 	public void readGatesFromDatabase(){
 		aGates = new HashSet<Gate>();
 		Iterator<Gate> gateIterator = plugin.getStaticDatabase().find(Gate.class).findList().iterator();
@@ -49,6 +61,11 @@ public class GateManager {
 		}
 	}
 	
+	/**
+	 * Adds the gate.
+	 *
+	 * @param gate the gate
+	 */
 	public void addGate(Gate gate){
 		aGates.add(gate);
 		String networkID = gate.getNetworkID();
@@ -64,6 +81,9 @@ public class GateManager {
 	 * @param player the player
 	 */
 	public void playerMove(Player player) {
+		if(isInCooldown(player.getName())){
+			return;
+		}
 		for(Gate gate : aGates){
 			if(gate.isPlayerInside(player)){
 				String netID=null;
@@ -87,7 +107,7 @@ public class GateManager {
 							nextGate = network.get(idx+1);
 						}
 						gate.useGate(player,nextGate);
-						
+						addCoolDown(player.getName(),gate);
 					}
 				}
 				break;
@@ -95,10 +115,61 @@ public class GateManager {
 		}
 	}
 	
+	/**
+	 * Adds the cool down.
+	 *
+	 * @param playerName the player name
+	 * @param gate the gate
+	 */
+	private void addCoolDown(String playerName,Gate gate) {
+		if(!isInCooldown(playerName)){
+			Task runningTask = new Task(plugin, playerName,gate.getNetworkID()) {
+				public void run() {
+					removeCoolDown(getStringArg(0));
+					plugin.getServer().getPlayer(getStringArg(0)).sendMessage("You can use again gates in network "+getStringArg(1));
+				}
+			};
+			cooldowns.add(playerName);
+			runningTask.startDelayed(plugin.getGateCoolDown());
+		}
+	}
+	
+	/**
+	 * Removes the cool down.
+	 *
+	 * @param playerName the player name
+	 */
+	protected  void removeCoolDown(String playerName) {
+		if(isInCooldown(playerName)){
+			cooldowns.remove(playerName);
+		}
+	}
+	
+	/**
+	 * Checks if is in cooldown.
+	 *
+	 * @param playerName the player name
+	 * @return true, if is in cooldown
+	 */
+	protected  boolean isInCooldown(String playerName){
+		return cooldowns.contains(playerName);
+	}
+	
+	/**
+	 * Adds the non flooding blocks.
+	 *
+	 * @param coord the coord
+	 */
 	public void addNonFloodingBlocks(QDWorldCoord coord){
 		nonFloodingBlocks.add(coord);
 	}
 
+	/**
+	 * Checks if is non flooding block.
+	 *
+	 * @param block the block
+	 * @return true, if is non flooding block
+	 */
 	public boolean isNonFloodingBlock(Block block) {
 		if (!(block.getType().equals(Material.WATER)||block.getType().equals(Material.STATIONARY_WATER))){
 			return false;

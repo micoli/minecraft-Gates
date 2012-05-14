@@ -2,13 +2,13 @@ package org.micoli.minecraft.gates.entities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Material;
 import org.micoli.minecraft.gates.Gates;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class GatePattern.
  */
@@ -18,7 +18,7 @@ public class GatePattern {
 	private String name = "";
 	
 	/** The blocks. */
-	private LinkedHashSet<String> blocks;
+	private ArrayList<String> blocks;
 	
 	/** The blocks map. */
 	private HashMap<String, Material> blocksMap = new HashMap<String, Material>();
@@ -58,7 +58,7 @@ public class GatePattern {
 	 *
 	 * @return the blocks
 	 */
-	public LinkedHashSet<String> getBlocks() {
+	public ArrayList<String> getBlocks() {
 		return blocks;
 	}
 
@@ -67,7 +67,7 @@ public class GatePattern {
 	 *
 	 * @param blocks the blocks to set
 	 */
-	public void setBlocks(LinkedHashSet<String> blocks) {
+	public void setBlocks(ArrayList<String> blocks) {
 		this.blocks = blocks;
 	}
 
