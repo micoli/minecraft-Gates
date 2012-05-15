@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.micoli.minecraft</groupId>
   <artifactId>morg-Gates</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.5.1-SNAPSHOT</version>
   <scm>
     <connection>scm:git:https://github.com/micoli/minecraft-Gates.git</connection>
     <developerConnection>scm:git:https://github.com/micoli/minecraft-Gates.git</developerConnection>

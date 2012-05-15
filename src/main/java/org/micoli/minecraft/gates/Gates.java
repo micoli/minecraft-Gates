@@ -10,16 +10,19 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.micoli.minecraft.bukkit.QDBukkitPlugin;
 import org.micoli.minecraft.bukkit.QDCommand;
+import org.micoli.minecraft.bukkit.QDCommandUsageException;
 import org.micoli.minecraft.gates.entities.Gate;
 import org.micoli.minecraft.gates.entities.GatePattern;
 import org.micoli.minecraft.gates.listeners.GatesPlayerListener;
 import org.micoli.minecraft.gates.managers.GateManager;
 import org.micoli.minecraft.gates.managers.GatePatternManager;
 import org.micoli.minecraft.gates.managers.GatesCommandManager;
+import org.micoli.minecraft.utils.ChatFormater;
 import org.micoli.minecraft.utils.FileUtils;
 import org.micoli.minecraft.utils.QDOrientation;
 import org.micoli.minecraft.utils.QDOrientation.MultipleOrientations;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Plugin Class LocalPlan.
  */
@@ -215,7 +218,10 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	 *             the exception
 	 */
 	@QDCommand(aliases = "create", permissions = { "gates.create" }, usage = "<patternName> <gateNetworkID>", description = "create a gate")
-	public void cmdGates(CommandSender sender, Command command, String label, String[] args) throws Exception {
+	public void cmdAddGate(CommandSender sender, Command command, String label, String[] args) throws Exception {
+		if(args.length!=3){
+			throw new QDCommandUsageException();
+		}
 		Player player = ((Player) sender);
 		Block block = player.getTargetBlock(null, 50);
 		MultipleOrientations orientations = QDOrientation.getOrientations(player);
@@ -233,6 +239,48 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		}
 	}
 
+	/**
+	 * Cmd remove gate.
+	 *
+	 * @param sender the sender
+	 * @param command the command
+	 * @param label the label
+	 * @param args the args
+	 * @throws Exception the exception
+	 */
+	@QDCommand(aliases = "remove", permissions = { "gates.remove" }, usage = "<gateId>", description = "remove a gate")
+	public void cmdRemoveGate(CommandSender sender, Command command, String label, String[] args) throws Exception {
+		if(args.length!=2){
+			throw new QDCommandUsageException();
+		}
+		try{
+			if(this.getGateManager().removeGate(Integer.parseInt(args[1]))){
+				sender.sendMessage("Gate removed you can remove blocks");
+			}else{
+				sender.sendMessage("Gate Id doesn't exists");
+			}
+		}catch(Exception e){
+			cmdListGates(sender,command,label,args);
+		}
+	}
+
+	/**
+	 * Cmd list gates.
+	 *
+	 * @param sender the sender
+	 * @param command the command
+	 * @param label the label
+	 * @param args the args
+	 * @throws Exception the exception
+	 */
+	@QDCommand(aliases = "list", permissions = { "gates.list" }, usage = "", description = "list all gates")
+	public void cmdListGates(CommandSender sender, Command command, String label, String[] args) throws Exception {
+		for(String networkId : getGateManager().getaGatesNetwork().keySet()){
+			for(Gate gate : getGateManager().getaGatesNetwork().get(networkId)){
+				sender.sendMessage(ChatFormater.format("%10s:%3d (%3d,%3d,%3d)",gate.getNetworkID(),gate.getId(),(int)gate.getX(),(int)gate.getY(),(int)gate.getZ()));
+			}
+		}
+	}
 	/**
 	 * Player move.
 	 * 

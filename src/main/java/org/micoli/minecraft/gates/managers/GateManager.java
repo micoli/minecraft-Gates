@@ -15,6 +15,7 @@ import org.micoli.minecraft.gates.Gates;
 import org.micoli.minecraft.gates.entities.Gate;
 import org.micoli.minecraft.utils.Task;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class GateManager.
  */
@@ -29,6 +30,15 @@ public class GateManager {
 	/** The a gates network. */
 	private Map<String,LinkedList<Gate>> aGatesNetwork = new HashMap<String,LinkedList<Gate>>();
 	
+	/**
+	 * Gets the a gates network.
+	 *
+	 * @return the aGatesNetwork
+	 */
+	public final Map<String, LinkedList<Gate>> getaGatesNetwork() {
+		return aGatesNetwork;
+	}
+
 	/** The non flooding blocks. */
 	private HashSet<QDWorldCoord> nonFloodingBlocks = new HashSet<QDWorldCoord>();
 	
@@ -72,6 +82,24 @@ public class GateManager {
 			aGatesNetwork.put(networkID,new LinkedList<Gate>());
 		}
 		aGatesNetwork.get(networkID).add(gate);
+	}
+	
+	/**
+	 * Removes the gate.
+	 *
+	 * @param gateId the gate id
+	 * @return true, if successful
+	 */
+	public boolean removeGate(int gateId){
+		for(Gate gate:aGates){
+			if(gate.getId()==gateId){
+				aGatesNetwork.get(gate.getNetworkID()).remove(gate);
+				aGates.remove(gate);
+				plugin.getStaticDatabase().delete(gate);
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
