@@ -31,28 +31,27 @@ import com.google.gson.reflect.TypeToken;
 @Entity
 @Table(name = "mrg_mrg_gateobject")
 public class Gate {
-	
-	/**
-	 * Instantiates a new gate.
-	 */
-	public Gate(){
-	}
+
 	/** The plugin. */
 	@Transient
 	Gates plugin;
-	
+
 	/** The block object. */
 	@Transient
 	Block tpBlock;
 
+	/** The non flooding coords. */
+	@Transient
+	ArrayList<QDWorldCoord> nonFloodingCoords = new ArrayList<QDWorldCoord>();
+
 	/** The id. */
 	@Id
 	Integer id;
-	
+
 	/** The gate name. */
 	@Length(max = 100)
-	String gateName="";
-	
+	String gateName = "";
+
 	/** The height. */
 	@NotNull
 	int height;
@@ -69,8 +68,8 @@ public class Gate {
 	/** The world name. */
 	@NotNull
 	@Length(max = 100)
-	String worldName="";
-	
+	String worldName = "";
+
 	/** The tpX,tpY,tpZ location. */
 	@NotNull
 	double tpX, tpY, tpZ;
@@ -78,43 +77,53 @@ public class Gate {
 	/** The outX,outY,outZ location. */
 	@NotNull
 	double outX, outY, outZ;
-	
+
 	/** The out yaw. */
 	@NotNull
-	int outYaw=0;
-	
+	int outYaw = 0;
+
 	/** The pattern used for creation. */
 	@NotNull
 	@Length(max = 100)
-	String pattern="";
+	String pattern = "";
 
 	/** The networkID of the gate. */
 	@NotNull
 	@Length(max = 100)
-	String networkID="";
-	
+	String networkID = "";
+
 	/** The non flooding coords str. */
 	@NotNull
 	@Lob
-	String nonFloodingCoordsStr="";
-	
-	/** The non flooding coords. */
-	@Transient
-	ArrayList<QDWorldCoord> nonFloodingCoords = new ArrayList<QDWorldCoord>();
-	
+	String nonFloodingCoordsStr = "";
+
+	/**
+	 * Instantiates a new gate object mandatory for ebean
+	 */
+	public Gate() {
+	}
+
 	/**
 	 * Instantiates a new gate object.
-	 *
-	 * @param plugin the plugin
-	 * @param centerBlock the center block
-	 * @param gatePattern the gate pattern
-	 * @param orientation the orientation
-	 * @param worldName the world name
-	 * @param networkID the network id
-	 * @param outLocation the out location
-	 * @param outYaw the out yaw
+	 * 
+	 * @param plugin
+	 *            the plugin
+	 * @param centerBlock
+	 *            the center block
+	 * @param gatePattern
+	 *            the gate pattern
+	 * @param orientation
+	 *            the orientation
+	 * @param worldName
+	 *            the world name
+	 * @param networkID
+	 *            the network id
+	 * @param outLocation
+	 *            the out location
+	 * @param outYaw
+	 *            the out yaw
 	 */
-	public Gate(Gates plugin,Block centerBlock, GatePattern gatePattern, CardinalDualOrientation orientation,String worldName,String networkID,Location outLocation, int outYaw) {
+	public Gate(Gates plugin, Block centerBlock, GatePattern gatePattern, CardinalDualOrientation orientation, String worldName, String networkID, Location outLocation, int outYaw) {
 		setPlugin(plugin);
 		this.tpBlock = centerBlock;
 		this.width = gatePattern.getWidth();
@@ -145,95 +154,95 @@ public class Gate {
 
 	/**
 	 * Checks if player is inside the gate.
-	 *
-	 * @param player the player
+	 * 
+	 * @param player
+	 *            the player
 	 * @return true, if is player inside
 	 */
 	public boolean isPlayerInside(Player player) {
 		Location playerLocation = player.getLocation();
-		//plugin.logger.log("test %s %s %s",player,playerLocation.toString(),blockObject.getLocation().toString());
-		if (!player.getWorld().getName().equals(worldName)){
-			plugin.logger.log("not inside world %s %s",worldName,tpBlock.getLocation().toString());
+		if (!player.getWorld().getName().equals(worldName)) {
+			plugin.logger.log("not inside world %s %s", worldName, tpBlock.getLocation().toString());
 			return false;
 		}
 		double X1 = playerLocation.getX(), Y1 = playerLocation.getY(), Z1 = playerLocation.getZ();
-		/*if (xyzDistance(playerLocation) > Math.min(width, height)) {
-			plugin.logger.log("not inside %s",blockObject.getLocation().toString());
-			return false;
-		}*/
+		/*
+		 * if (xyzDistance(playerLocation) > Math.min(width, height)) {
+		 * plugin.logger
+		 * .log("not inside %s",blockObject.getLocation().toString()); return
+		 * false; }
+		 */
 		if (tpY <= Y1 && Y1 <= tpY + this.height) {
-			//plugin.logger.log("Inside Y %f",Y1);
 			switch (orientation) {
-				case NS:
-					//plugin.logger.log("NS test player(%d -> %d,%d -> %d, %d %d %d ) W(%d) H(%d)",(int)X1,(int)X,(int)Y1,(int)Y,  (int)(Z - this.width / 2),(int)Z1,(int)(Z + this.width / 2)   ,width,height);
-					if ((tpZ - this.width / 2) <= Z1 && Z1 <= (tpZ + this.width / 2) && (int)tpX == (int)X1) {
-						plugin.logger.log("NS inside player");
-						return true;
-					}
+			case NS:
+				if ((tpZ - this.width / 2) <= Z1 && Z1 <= (tpZ + this.width / 2) && (int) tpX == (int) X1) {
+					plugin.logger.log("NS inside player");
+					return true;
+				}
 				break;
-				case EW:
-					if ((tpX - this.width / 2) <= X1 && X1 <= (tpX + this.width / 2) && (int)tpZ == (int)Z1) {
-						return true;
-					}
+			case EW:
+				if ((tpX - this.width / 2) <= X1 && X1 <= (tpX + this.width / 2) && (int) tpZ == (int) Z1) {
+					return true;
+				}
 				break;
 			}
 		}
-		//plugin.logger.log("not inside 2 %s",blockObject.getLocation().toString());
 		return false;
 	}
 
 	/**
 	 * Gets the out location.
-	 *
-	 * @param player the player
+	 * 
+	 * @param player
+	 *            the player
 	 * @return the out location
 	 */
-	private Location getOutLocation(Player player){
-		Location location = new Location(plugin.getServer().getWorld(getWorldName()),getOutX(),getOutY(),getOutZ());
+	private Location getOutLocation(Player player) {
+		Location location = new Location(plugin.getServer().getWorld(getWorldName()), getOutX(), getOutY(), getOutZ());
 		location.setYaw(getOutYaw());
-		location.setPitch((player!=null)?player.getLocation().getPitch():0);
+		location.setPitch((player != null) ? player.getLocation().getPitch() : 0);
 		return location;
 	}
-	
+
 	/**
 	 * Use gate.
-	 *
-	 * @param player the player
-	 * @param nextGate the next gate
+	 * 
+	 * @param player
+	 *            the player
+	 * @param nextGate
+	 *            the next gate
 	 */
 	public void useGate(Player player, Gate nextGate) {
-		player.sendMessage(ChatFormater.format("Use gate %d",getId()));
+		player.sendMessage(ChatFormater.format("Use gate %d", getId()));
 		player.teleport(nextGate.getOutLocation(player));
 	}
 
 	/**
 	 * Init the object from the from database.
-	 *
-	 * @param instance the instance
+	 * 
+	 * @param instance
+	 *            the instance
 	 * @return true, if successful
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean initFromDatabase(Gates instance) {
 		plugin = instance;
 		World world = plugin.getServer().getWorld(worldName);
-		tpBlock = world.getBlockAt(new Location(world,tpX,tpY,tpZ));
+		tpBlock = world.getBlockAt(new Location(world, tpX, tpY, tpZ));
 		Gson gson = new Gson();
-		nonFloodingCoords=gson.fromJson(nonFloodingCoordsStr,new TypeToken<ArrayList<QDWorldCoord>>(){}.getType());
-		//for(QDWorldCoord coord:nonFloodingCoords){
-		//	plugin.logger.log("%10s %s %d %d %d",this.getGateName(),coord.getWorld(),coord.getX(),coord.getY(),coord.getZ());
-		//}
-		//if(blockObject.getTypeId()!=0){
+		setNonFloodingCoords((ArrayList<QDWorldCoord>) gson.fromJson(nonFloodingCoordsStr, new TypeToken<ArrayList<QDWorldCoord>>() {
+		}.getType()));
+		// if(blockObject.getTypeId()!=0)
 		initGate();
 		return true;
-		//}
-		//return false;
 	}
-	
+
 	/**
 	 * Inits the gate.
 	 */
 	public void initGate() {
-		if(nonFloodingCoords!=null){
-			for(QDWorldCoord coord : nonFloodingCoords){
+		if (nonFloodingCoords != null) {
+			for (QDWorldCoord coord : nonFloodingCoords) {
 				plugin.getGateManager().addNonFloodingBlocks(coord);
 			}
 		}
@@ -247,68 +256,76 @@ public class Gate {
 	}
 
 	/**
+	 * delete.
+	 */
+	public void delete() {
+		plugin.getStaticDatabase().delete(this);
+	}
+
+	/**
 	 * Draw the gate.
-	 *
-	 * @param gatePattern the gate pattern
+	 * 
+	 * @param gatePattern
+	 *            the gate pattern
 	 */
 	public void draw(GatePattern gatePattern) {
 		World world = plugin.getServer().getWorld(worldName);
 		int xOffset = gatePattern.getxOffset();
-		int yOffset=0;
-		ArrayList<String> patterns= gatePattern.getLines();
-		Location location = new Location(world,0,0,0);
+		int yOffset = 0;
+		ArrayList<String> patterns = gatePattern.getLines();
+		Location location = new Location(world, 0, 0, 0);
 		plugin.logger.log(gatePattern.getName());
-		for(int i=0;i<patterns.size();i++){
-			yOffset = patterns.size()-i-1;
+		for (int i = 0; i < patterns.size(); i++) {
+			yOffset = patterns.size() - i - 1;
 			String line = patterns.get(i);
-			plugin.logger.log("%d -> %s",i,line);
-			for(int j=0;j<line.length();j++){
-				QDWorldCoord coord = new QDWorldCoord(worldName,0,0,0);
+			plugin.logger.log("%d -> %s", i, line);
+			for (int j = 0; j < line.length(); j++) {
+				QDWorldCoord coord = new QDWorldCoord(worldName, 0, 0, 0);
 				switch (orientation) {
-					case EW:
-						coord.setXYZ(tpX-xOffset+j,tpY+yOffset,tpZ);
-					break;	
-					case NS:
-						coord.setXYZ(tpX,tpY+yOffset,tpZ-xOffset+j);
-					break;	
+				case EW:
+					coord.setXYZ(tpX - xOffset + j, tpY + yOffset, tpZ);
+					break;
+				case NS:
+					coord.setXYZ(tpX, tpY + yOffset, tpZ - xOffset + j);
+					break;
 				}
-				location = new Location(world,coord.getX(),coord.getY(),coord.getZ());
-				String blockKey = line.charAt(j)+"";
-				if(gatePattern.getBlocksMap().containsKey(blockKey)){
-					Material material = gatePattern.getBlocksMap().get(line.charAt(j)+"");
-					if(plugin.isWithFlowControl()){
+				location = new Location(world, coord.getX(), coord.getY(), coord.getZ());
+				String blockKey = line.charAt(j) + "";
+				if (gatePattern.getBlocksMap().containsKey(blockKey)) {
+					Material material = gatePattern.getBlocksMap().get(line.charAt(j) + "");
+					if (plugin.isWithFlowControl()) {
 						world.getBlockAt(location).setType(material);
-					}else{
-						if (material.equals(Material.WATER) || material.equals(Material.STATIONARY_WATER)){
+					} else {
+						if (material.equals(Material.WATER) || material.equals(Material.STATIONARY_WATER)) {
 							plugin.logger.log("can't add water without enabling flow control");
-						}else{
+						} else {
 							world.getBlockAt(location).setType(material);
 						}
 					}
-				}else{
-					if(blockKey.equals("=")){
-					}else if(blockKey.equals("_")){
-						if(plugin.isWithFlowControl()){
+				} else {
+					if (blockKey.equals("=")) {
+					} else if (blockKey.equals("_")) {
+						if (plugin.isWithFlowControl()) {
 							world.getBlockAt(location).setType(Material.WATER);
 						}
 						nonFloodingCoords.add(coord);
-					}else if(blockKey.equals("-")){
+					} else if (blockKey.equals("-")) {
 						world.getBlockAt(location).setType(Material.AIR);
-					}else{
-						if(!blockKey.equals("!")){
-							plugin.logger.log("not found "+line.charAt(j));
+					} else {
+						if (!blockKey.equals("!")) {
+							plugin.logger.log("not found " + line.charAt(j));
 						}
 					}
 				}
 				nonFloodingCoords.add(coord);
 			}
 		}
-		this.nonFloodingCoordsStr=Json.exportObjectToJson(nonFloodingCoords);
+		this.nonFloodingCoordsStr = Json.exportObjectToJson(nonFloodingCoords);
 	}
 
 	/**
 	 * Gets the plugin.
-	 *
+	 * 
 	 * @return the plugin
 	 */
 	public Gates getPlugin() {
@@ -317,8 +334,9 @@ public class Gate {
 
 	/**
 	 * Sets the plugin.
-	 *
-	 * @param plugin the plugin to set
+	 * 
+	 * @param plugin
+	 *            the plugin to set
 	 */
 	public void setPlugin(Gates plugin) {
 		this.plugin = plugin;
@@ -326,7 +344,7 @@ public class Gate {
 
 	/**
 	 * Gets the tp block.
-	 *
+	 * 
 	 * @return the blockObject
 	 */
 	public Block getTpBlock() {
@@ -335,8 +353,9 @@ public class Gate {
 
 	/**
 	 * Sets the tp block.
-	 *
-	 * @param blockObject the blockObject to set
+	 * 
+	 * @param blockObject
+	 *            the blockObject to set
 	 */
 	public void setTpBlock(Block blockObject) {
 		this.tpBlock = blockObject;
@@ -344,7 +363,7 @@ public class Gate {
 
 	/**
 	 * Gets the id.
-	 *
+	 * 
 	 * @return the id
 	 */
 	public Integer getId() {
@@ -353,8 +372,9 @@ public class Gate {
 
 	/**
 	 * Sets the id.
-	 *
-	 * @param id the id to set
+	 * 
+	 * @param id
+	 *            the id to set
 	 */
 	public void setId(Integer id) {
 		this.id = id;
@@ -362,7 +382,7 @@ public class Gate {
 
 	/**
 	 * Gets the gate name.
-	 *
+	 * 
 	 * @return the gateName
 	 */
 	public String getGateName() {
@@ -371,8 +391,9 @@ public class Gate {
 
 	/**
 	 * Sets the gate name.
-	 *
-	 * @param gateName the gateName to set
+	 * 
+	 * @param gateName
+	 *            the gateName to set
 	 */
 	public void setGateName(String gateName) {
 		this.gateName = gateName;
@@ -380,7 +401,7 @@ public class Gate {
 
 	/**
 	 * Gets the tp x.
-	 *
+	 * 
 	 * @return the tpX
 	 */
 	public double getTpX() {
@@ -389,8 +410,9 @@ public class Gate {
 
 	/**
 	 * Sets the tp x.
-	 *
-	 * @param tpX the tpX to set
+	 * 
+	 * @param tpX
+	 *            the tpX to set
 	 */
 	public void setTpX(double tpX) {
 		this.tpX = tpX;
@@ -398,7 +420,7 @@ public class Gate {
 
 	/**
 	 * Gets the tp y.
-	 *
+	 * 
 	 * @return the tpY
 	 */
 	public double getTpY() {
@@ -407,8 +429,9 @@ public class Gate {
 
 	/**
 	 * Sets the tp y.
-	 *
-	 * @param tpY the tpY to set
+	 * 
+	 * @param tpY
+	 *            the tpY to set
 	 */
 	public void setTpY(double tpY) {
 		this.tpY = tpY;
@@ -416,7 +439,7 @@ public class Gate {
 
 	/**
 	 * Gets the tp z.
-	 *
+	 * 
 	 * @return the tpZ
 	 */
 	public double getTpZ() {
@@ -425,8 +448,9 @@ public class Gate {
 
 	/**
 	 * Sets the tp z.
-	 *
-	 * @param tpZ the tpZ to set
+	 * 
+	 * @param tpZ
+	 *            the tpZ to set
 	 */
 	public void setTpZ(double tpZ) {
 		this.tpZ = tpZ;
@@ -434,7 +458,7 @@ public class Gate {
 
 	/**
 	 * Gets the out x.
-	 *
+	 * 
 	 * @return the outX
 	 */
 	public double getOutX() {
@@ -443,8 +467,9 @@ public class Gate {
 
 	/**
 	 * Sets the out x.
-	 *
-	 * @param outX the outX to set
+	 * 
+	 * @param outX
+	 *            the outX to set
 	 */
 	public void setOutX(double outX) {
 		this.outX = outX;
@@ -452,7 +477,7 @@ public class Gate {
 
 	/**
 	 * Gets the out y.
-	 *
+	 * 
 	 * @return the outY
 	 */
 	public double getOutY() {
@@ -461,8 +486,9 @@ public class Gate {
 
 	/**
 	 * Sets the out y.
-	 *
-	 * @param outY the outY to set
+	 * 
+	 * @param outY
+	 *            the outY to set
 	 */
 	public void setOutY(double outY) {
 		this.outY = outY;
@@ -470,7 +496,7 @@ public class Gate {
 
 	/**
 	 * Gets the out z.
-	 *
+	 * 
 	 * @return the outZ
 	 */
 	public double getOutZ() {
@@ -479,8 +505,9 @@ public class Gate {
 
 	/**
 	 * Sets the out z.
-	 *
-	 * @param outZ the outZ to set
+	 * 
+	 * @param outZ
+	 *            the outZ to set
 	 */
 	public void setOutZ(double outZ) {
 		this.outZ = outZ;
@@ -488,7 +515,7 @@ public class Gate {
 
 	/**
 	 * Gets the out yaw.
-	 *
+	 * 
 	 * @return the outYaw
 	 */
 	public int getOutYaw() {
@@ -497,8 +524,9 @@ public class Gate {
 
 	/**
 	 * Sets the out yaw.
-	 *
-	 * @param outYaw the outYaw to set
+	 * 
+	 * @param outYaw
+	 *            the outYaw to set
 	 */
 	public void setOutYaw(int outYaw) {
 		this.outYaw = outYaw;
@@ -506,7 +534,7 @@ public class Gate {
 
 	/**
 	 * Gets the height.
-	 *
+	 * 
 	 * @return the height
 	 */
 	public int getHeight() {
@@ -515,8 +543,9 @@ public class Gate {
 
 	/**
 	 * Sets the height.
-	 *
-	 * @param height the height to set
+	 * 
+	 * @param height
+	 *            the height to set
 	 */
 	public void setHeight(int height) {
 		this.height = height;
@@ -524,7 +553,7 @@ public class Gate {
 
 	/**
 	 * Gets the width.
-	 *
+	 * 
 	 * @return the width
 	 */
 	public int getWidth() {
@@ -533,8 +562,9 @@ public class Gate {
 
 	/**
 	 * Sets the width.
-	 *
-	 * @param width the width to set
+	 * 
+	 * @param width
+	 *            the width to set
 	 */
 	public void setWidth(int width) {
 		this.width = width;
@@ -542,7 +572,7 @@ public class Gate {
 
 	/**
 	 * Gets the orientation.
-	 *
+	 * 
 	 * @return the orientation
 	 */
 	public CardinalDualOrientation getOrientation() {
@@ -551,8 +581,9 @@ public class Gate {
 
 	/**
 	 * Sets the orientation.
-	 *
-	 * @param orientation the orientation to set
+	 * 
+	 * @param orientation
+	 *            the orientation to set
 	 */
 	public void setOrientation(CardinalDualOrientation orientation) {
 		this.orientation = orientation;
@@ -560,7 +591,7 @@ public class Gate {
 
 	/**
 	 * Gets the world name.
-	 *
+	 * 
 	 * @return the worldName
 	 */
 	public String getWorldName() {
@@ -569,8 +600,9 @@ public class Gate {
 
 	/**
 	 * Sets the world name.
-	 *
-	 * @param worldName the worldName to set
+	 * 
+	 * @param worldName
+	 *            the worldName to set
 	 */
 	public void setWorldName(String worldName) {
 		this.worldName = worldName;
@@ -578,7 +610,7 @@ public class Gate {
 
 	/**
 	 * Gets the x.
-	 *
+	 * 
 	 * @return the x
 	 */
 	public double getX() {
@@ -587,8 +619,9 @@ public class Gate {
 
 	/**
 	 * Sets the x.
-	 *
-	 * @param x the x to set
+	 * 
+	 * @param x
+	 *            the x to set
 	 */
 	public void setX(double x) {
 		tpX = x;
@@ -596,7 +629,7 @@ public class Gate {
 
 	/**
 	 * Gets the y.
-	 *
+	 * 
 	 * @return the y
 	 */
 	public double getY() {
@@ -605,8 +638,9 @@ public class Gate {
 
 	/**
 	 * Sets the y.
-	 *
-	 * @param y the y to set
+	 * 
+	 * @param y
+	 *            the y to set
 	 */
 	public void setY(double y) {
 		tpY = y;
@@ -614,7 +648,7 @@ public class Gate {
 
 	/**
 	 * Gets the z.
-	 *
+	 * 
 	 * @return the z
 	 */
 	public double getZ() {
@@ -623,8 +657,9 @@ public class Gate {
 
 	/**
 	 * Sets the z.
-	 *
-	 * @param z the z to set
+	 * 
+	 * @param z
+	 *            the z to set
 	 */
 	public void setZ(double z) {
 		tpZ = z;
@@ -632,7 +667,7 @@ public class Gate {
 
 	/**
 	 * Gets the pattern.
-	 *
+	 * 
 	 * @return the pattern
 	 */
 	public String getPattern() {
@@ -641,8 +676,9 @@ public class Gate {
 
 	/**
 	 * Sets the pattern.
-	 *
-	 * @param pattern the pattern to set
+	 * 
+	 * @param pattern
+	 *            the pattern to set
 	 */
 	public void setPattern(String pattern) {
 		this.pattern = pattern;
@@ -650,7 +686,7 @@ public class Gate {
 
 	/**
 	 * Gets the network id.
-	 *
+	 * 
 	 * @return the networkID
 	 */
 	public String getNetworkID() {
@@ -659,8 +695,9 @@ public class Gate {
 
 	/**
 	 * Sets the network id.
-	 *
-	 * @param networkID the networkID to set
+	 * 
+	 * @param networkID
+	 *            the networkID to set
 	 */
 	public void setNetworkID(String networkID) {
 		this.networkID = networkID;
@@ -668,7 +705,7 @@ public class Gate {
 
 	/**
 	 * Gets the non flooding coords str.
-	 *
+	 * 
 	 * @return the nonFloodingCoordsStr
 	 */
 	public String getNonFloodingCoordsStr() {
@@ -677,8 +714,9 @@ public class Gate {
 
 	/**
 	 * Sets the non flooding coords str.
-	 *
-	 * @param nonFloodingCoordsStr the nonFloodingCoordsStr to set
+	 * 
+	 * @param nonFloodingCoordsStr
+	 *            the nonFloodingCoordsStr to set
 	 */
 	public void setNonFloodingCoordsStr(String nonFloodingCoordsStr) {
 		this.nonFloodingCoordsStr = nonFloodingCoordsStr;
@@ -686,8 +724,9 @@ public class Gate {
 
 	/**
 	 * Sets the non flooding coords.
-	 *
-	 * @param nonFloodingCoords the nonFloodingCoords to set
+	 * 
+	 * @param nonFloodingCoords
+	 *            the nonFloodingCoords to set
 	 */
 	public void setNonFloodingCoords(ArrayList<QDWorldCoord> nonFloodingCoords) {
 		this.nonFloodingCoords = nonFloodingCoords;
@@ -695,7 +734,7 @@ public class Gate {
 
 	/**
 	 * Gets the non flooding coords.
-	 *
+	 * 
 	 * @return the nonFloodingCoords
 	 */
 	public ArrayList<QDWorldCoord> getNonFloodingCoords() {
