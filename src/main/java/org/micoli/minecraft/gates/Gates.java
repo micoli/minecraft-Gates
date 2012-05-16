@@ -255,7 +255,7 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		}
 		try{
 			if(this.getGateManager().removeGate(Integer.parseInt(args[1]))){
-				sender.sendMessage("Gate removed you can remove blocks");
+				sender.sendMessage("Gate removed, you can remove blocks now");
 			}else{
 				sender.sendMessage("Gate Id doesn't exists");
 			}
@@ -276,8 +276,9 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 	@QDCommand(aliases = "list", permissions = { "gates.list" }, usage = "", description = "list all gates")
 	public void cmdListGates(CommandSender sender, Command command, String label, String[] args) throws Exception {
 		for(String networkId : getGateManager().getaGatesNetwork().keySet()){
+			sender.sendMessage(ChatFormater.format("{ChatColor.GOLD}%s {ChatColor.WHITE}:",networkId));
 			for(Gate gate : getGateManager().getaGatesNetwork().get(networkId)){
-				sender.sendMessage(ChatFormater.format("%10s:%3d (%3d,%3d,%3d)",gate.getNetworkID(),gate.getId(),(int)gate.getX(),(int)gate.getY(),(int)gate.getZ()));
+				sender.sendMessage(ChatFormater.format("{ChatColor.WHITE}Gate Id :{ChatColor.BLUE}%3d{ChatColor.WHITE} Pos : {ChatColor.BLUE}%3d,%3d,%3d",gate.getId(),(int)gate.getX(),(int)gate.getY(),(int)gate.getZ()));
 			}
 		}
 	}
