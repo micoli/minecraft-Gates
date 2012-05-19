@@ -84,7 +84,7 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		gateManager = new GateManager(instance);
 		gateManager.readGatesFromDatabase();
 
-		FileUtils.initializeFileFromRessource(this,"GatePatterns.yml",true);
+		FileUtils.initializeFileFromRessource(this,"GatePatterns.yml",false);
 		gatePatternManager = GatePatternManager.readGatesPattern(instance, "GatePatterns.yml");
 		
 		getPm().registerEvents(new GatesPlayerListener(this),this);

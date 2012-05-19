@@ -294,13 +294,14 @@ public class Gate {
 				if (gatePattern.getBlocksMap().containsKey(blockKey)) {
 					Material material = Material.getMaterial(gatePattern.getBlocksMap().get(line.charAt(j) + "").getItemTypeId());
 					if (plugin.isWithFlowControl()) {
-						world.getBlockAt(location).setType(material);
-						world.getBlockAt(location).setData(gatePattern.getBlocksMap().get(line.charAt(j) + "").getData());
+						world.getBlockAt(location).setTypeIdAndData(gatePattern.getBlocksMap().get(line.charAt(j) + "").getItemTypeId(),(byte)gatePattern.getBlocksMap().get(line.charAt(j) + "").getData(),false);
+						plugin.logger.log("%d %d",gatePattern.getBlocksMap().get(line.charAt(j) + "").getItemTypeId(),(byte)gatePattern.getBlocksMap().get(line.charAt(j) + "").getData());
 					} else {
 						if (material.equals(Material.WATER) || material.equals(Material.STATIONARY_WATER)) {
 							plugin.logger.log("can't add water without enabling flow control");
 						} else {
-							world.getBlockAt(location).setType(material);
+							world.getBlockAt(location).setTypeIdAndData(gatePattern.getBlocksMap().get(line.charAt(j) + "").getItemTypeId(),(byte)gatePattern.getBlocksMap().get(line.charAt(j) + "").getData(),false);
+							plugin.logger.log("%d %d",gatePattern.getBlocksMap().get(line.charAt(j) + "").getItemTypeId(),(byte)gatePattern.getBlocksMap().get(line.charAt(j) + "").getData());
 						}
 					}
 				} else {
