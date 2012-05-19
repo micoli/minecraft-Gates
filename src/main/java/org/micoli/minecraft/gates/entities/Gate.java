@@ -292,9 +292,10 @@ public class Gate {
 				location = new Location(world, coord.getX(), coord.getY(), coord.getZ());
 				String blockKey = line.charAt(j) + "";
 				if (gatePattern.getBlocksMap().containsKey(blockKey)) {
-					Material material = gatePattern.getBlocksMap().get(line.charAt(j) + "");
+					Material material = Material.getMaterial(gatePattern.getBlocksMap().get(line.charAt(j) + "").getItemTypeId());
 					if (plugin.isWithFlowControl()) {
 						world.getBlockAt(location).setType(material);
+						world.getBlockAt(location).setData(gatePattern.getBlocksMap().get(line.charAt(j) + "").getData());
 					} else {
 						if (material.equals(Material.WATER) || material.equals(Material.STATIONARY_WATER)) {
 							plugin.logger.log("can't add water without enabling flow control");

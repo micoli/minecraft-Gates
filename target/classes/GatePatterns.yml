@@ -1,16 +1,14 @@
 patterns :
-  - name   : pattern01
+  - name   : basic
     blocks :
-    - a_7
-    - b_56
-    - c_73
-    - d_86
+    - a_17:0
+    - b_17:1
+    - c_33:0
     lines :
-    - aaaaa
-    - a___a
-    - a___a
-    - bd-db
-    - ==!==
+    - cac
+    - b_b
+    - c-c
+    - =!=
   - name   : pattern02
     blocks :
     - a_7

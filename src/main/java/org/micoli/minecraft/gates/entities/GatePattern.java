@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Material;
+import org.bukkit.material.MaterialData;
 import org.micoli.minecraft.gates.Gates;
 
 // TODO: Auto-generated Javadoc
@@ -21,7 +22,7 @@ public class GatePattern {
 	private ArrayList<String> blocks;
 	
 	/** The blocks map. */
-	private HashMap<String, Material> blocksMap = new HashMap<String, Material>();
+	private HashMap<String, MaterialData> blocksMap = new HashMap<String, MaterialData>();
 	
 	/** The lines. */
 	private ArrayList<String> lines;
@@ -131,7 +132,7 @@ public class GatePattern {
 	 *
 	 * @return the blocksMap
 	 */
-	public HashMap<String, Material> getBlocksMap() {
+	public HashMap<String, MaterialData> getBlocksMap() {
 		return blocksMap;
 	}
 
@@ -140,7 +141,7 @@ public class GatePattern {
 	 *
 	 * @param blocksMap the blocksMap to set
 	 */
-	public void setBlocksMap(HashMap<String, Material> blocksMap) {
+	public void setBlocksMap(HashMap<String, MaterialData> blocksMap) {
 		this.blocksMap = blocksMap;
 	}
 
@@ -150,11 +151,13 @@ public class GatePattern {
 	 * @param plugin the plugin
 	 */
 	public void initPattern(Gates plugin) {
-		Pattern pattern = Pattern.compile("(.*)_(.*)");
+		Pattern pattern = Pattern.compile("(.*)_(.*):(.*)");
 		for (String txt : blocks) {
 			Matcher matcher = pattern.matcher(txt);
 			if (matcher.matches()) {
-				this.getBlocksMap().put(matcher.group(1), Material.getMaterial(Integer.parseInt(matcher.group(2))));
+				//Material material = Material.getMaterial(Integer.parseInt(matcher.group(2)));
+				MaterialData mat = new MaterialData(Integer.parseInt(matcher.group(2)),(byte)Integer.parseInt(matcher.group(3)));
+				this.getBlocksMap().put(matcher.group(1), mat);
 			}
 		}
 		
