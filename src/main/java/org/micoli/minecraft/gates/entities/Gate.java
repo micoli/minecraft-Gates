@@ -162,7 +162,7 @@ public class Gate {
 	public boolean isPlayerInside(Player player) {
 		Location playerLocation = player.getLocation();
 		if (!player.getWorld().getName().equals(worldName)) {
-			plugin.logger.log("not inside world %s %s", worldName, tpBlock.getLocation().toString());
+			//plugin.logger.log("not inside world %s %s", worldName, tpBlock.getLocation().toString());
 			return false;
 		}
 		double X1 = playerLocation.getX(), Y1 = playerLocation.getY(), Z1 = playerLocation.getZ();
