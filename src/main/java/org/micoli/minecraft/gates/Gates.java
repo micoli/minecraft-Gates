@@ -89,7 +89,6 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		
 		getPm().registerEvents(new GatesPlayerListener(this),this);
 		
-		logger.log(gatePatternManager.toString());
 		saveConfig();
 
 		executor = new GatesCommandManager(this, new Class[] { getClass() });
