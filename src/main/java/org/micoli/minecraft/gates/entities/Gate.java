@@ -230,8 +230,7 @@ public class Gate {
 		World world = plugin.getServer().getWorld(worldName);
 		tpBlock = world.getBlockAt(new Location(world, tpX, tpY, tpZ));
 		Gson gson = new Gson();
-		setNonFloodingCoords((ArrayList<QDWorldCoord>) gson.fromJson(nonFloodingCoordsStr, new TypeToken<ArrayList<QDWorldCoord>>() {
-		}.getType()));
+		setNonFloodingCoords((ArrayList<QDWorldCoord>) gson.fromJson(nonFloodingCoordsStr, new TypeToken<ArrayList<QDWorldCoord>>() {}.getType()));
 		// if(blockObject.getTypeId()!=0)
 		initGate();
 		return true;
