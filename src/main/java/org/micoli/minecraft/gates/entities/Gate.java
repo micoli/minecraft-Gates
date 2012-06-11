@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.micoli.minecraft.entities.QDWorldCoord;
 import org.micoli.minecraft.gates.Gates;
+import org.micoli.minecraft.utils.BlockUtils;
 import org.micoli.minecraft.utils.ChatFormater;
 import org.micoli.minecraft.utils.Json;
 import org.micoli.minecraft.utils.QDOrientation.CardinalDualOrientation;
@@ -174,16 +175,16 @@ public class Gate {
 		 */
 		if (tpY <= Y1 && Y1 <= tpY + this.height) {
 			switch (orientation) {
-			case NS:
-				if ((tpZ - this.width / 2) <= Z1 && Z1 <= (tpZ + this.width / 2) && (int) tpX == (int) X1) {
-					plugin.logger.log("NS inside player");
-					return true;
-				}
+				case NS:
+					if ((tpZ - this.width / 2) <= Z1 && Z1 <= (tpZ + this.width / 2) && (int) tpX == (int) X1) {
+						plugin.logger.log("NS inside player");
+						return true;
+					}
 				break;
-			case EW:
-				if ((tpX - this.width / 2) <= X1 && X1 <= (tpX + this.width / 2) && (int) tpZ == (int) Z1) {
-					return true;
-				}
+				case EW:
+					if ((tpX - this.width / 2) <= X1 && X1 <= (tpX + this.width / 2) && (int) tpZ == (int) Z1) {
+						return true;
+					}
 				break;
 			}
 		}
@@ -214,7 +215,7 @@ public class Gate {
 	 */
 	public void useGate(Player player, Gate nextGate) {
 		player.sendMessage(ChatFormater.format("Use gate %d", getId()));
-		player.teleport(nextGate.getOutLocation(player));
+		player.teleport(BlockUtils.getTopPositionAtPos(nextGate.getOutLocation(player)));
 	}
 
 	/**

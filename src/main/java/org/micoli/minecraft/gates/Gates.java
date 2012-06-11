@@ -224,6 +224,8 @@ public class Gates extends QDBukkitPlugin implements ActionListener {
 		Player player = ((Player) sender);
 		Block block = player.getTargetBlock(null, 50);
 		MultipleOrientations orientations = QDOrientation.getOrientations(player);
+		this.logger.log("-----------%s ",orientations.getCardinalDualOrientation().toString());
+
 		try {
 			GatePattern gatePattern = this.getGatePatternManager().getGatePatternFromName(args[1]);
 

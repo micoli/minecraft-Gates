@@ -1,14 +1,11 @@
 package org.micoli.minecraft.gates.listeners;
 
-import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.micoli.minecraft.gates.Gates;
+import org.micoli.minecraft.gates.managers.GateManager;
 
-// TODO: Auto-generated Javadoc
 /**
  * The listener interface for receiving QDPlayer events. The class that is
  * interested in processing a QDPlayer event implements this interface, and the
@@ -23,6 +20,7 @@ public class GatesPlayerListener implements Listener {
 
 	/** The plugin. */
 	Gates plugin;
+	GateManager gateManager = null;
 
 	/**
 	 * Instantiates a new gates player listener.
@@ -39,6 +37,8 @@ public class GatesPlayerListener implements Listener {
 	 *
 	 * @param event the event
 	 */
+	/*
+	too much CPU usage 
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onBlockFromTo(BlockFromToEvent event) {
 		if(!plugin.isWithFlowControl()){
@@ -53,6 +53,7 @@ public class GatesPlayerListener implements Listener {
 			event.setCancelled(true);
 		}
 	}
+	*/
 
 	/**
 	 * On player move.
@@ -62,6 +63,9 @@ public class GatesPlayerListener implements Listener {
 	 */
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
-		plugin.getGateManager().playerMove(event.getPlayer());
+		if(gateManager==null){
+			gateManager=plugin.getGateManager();	
+		}
+		gateManager.playerMove(event.getPlayer());
 	}
 }
