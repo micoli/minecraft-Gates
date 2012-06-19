@@ -215,7 +215,7 @@ public class Gate {
 	 */
 	public void useGate(Player player, Gate nextGate) {
 		player.sendMessage(ChatFormater.format("Use gate %d", getId()));
-		player.teleport(BlockUtils.getTopPositionAtPos(nextGate.getOutLocation(player)));
+		player.teleport(nextGate.getOutLocation(player));
 	}
 
 	/**
